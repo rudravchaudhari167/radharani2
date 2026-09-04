@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Product from "@/models/Product";
-import Review from "@/models/Review";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { getServerSession } from "@/lib/auth";
 
 export async function GET(
@@ -9,8 +7,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect();
-
     const { id } = await params;
 
     if (!id) {
@@ -20,10 +16,37 @@ export async function GET(
       );
     }
 
-    const reviews = await Review.find({ productId: id })
-      .populate("userId", "name")
-      .sort({ createdAt: -1 })
-      .lean();
+    const supabase = getSupabaseServer();
+
+    const { data: rows, error } = await supabase
+      .from("reviews")
+      .select("id, user_id, product_id, rating, comment, created_at, updated_at")
+      .eq("product_id", id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const userIds = [...new Set((rows || []).map((r) => r.user_id))];
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", userIds.length ? userIds : [""]);
+
+    const nameMap = new Map<string, string>(
+      (users || []).map((u) => [u.id, u.name])
+    );
+
+    const reviews = (rows || []).map((r) => ({
+      _id: r.id,
+      userId: { _id: r.user_id, name: nameMap.get(r.user_id) || "" },
+      productId: r.product_id,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }));
 
     return NextResponse.json({ reviews });
   } catch (error) {
@@ -47,8 +70,6 @@ export async function POST(
         { status: 401 }
       );
     }
-
-    await dbConnect();
 
     const { id } = await params;
 
@@ -92,7 +113,15 @@ export async function POST(
       );
     }
 
-    const product = await Product.findOne({ _id: id, isActive: true });
+    const supabase = getSupabaseServer();
+
+    const { data: product } = await supabase
+      .from("products")
+      .select("id")
+      .eq("id", id)
+      .eq("is_active", true)
+      .maybeSingle();
+
     if (!product) {
       return NextResponse.json(
         { error: "Product not found" },
@@ -100,10 +129,12 @@ export async function POST(
       );
     }
 
-    const existingReview = await Review.findOne({
-      productId: id,
-      userId: session.userId,
-    });
+    const { data: existingReview } = await supabase
+      .from("reviews")
+      .select("id")
+      .eq("product_id", id)
+      .eq("user_id", session.userId)
+      .maybeSingle();
 
     if (existingReview) {
       return NextResponse.json(
@@ -112,24 +143,60 @@ export async function POST(
       );
     }
 
-    const review = await Review.create({
-      userId: session.userId,
-      productId: id,
-      rating: Math.round(rating),
-      comment: comment.trim(),
-    });
+    const reviewRating = Math.round(rating);
 
-    const allReviews = await Review.find({ productId: id });
-    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
-    const avgRating = totalRating / allReviews.length;
+    const { data: review, error: insertError } = await supabase
+      .from("reviews")
+      .insert({
+        user_id: session.userId,
+        product_id: id,
+        rating: reviewRating,
+        comment: comment.trim(),
+      })
+      .select("id, user_id, product_id, rating, comment, created_at, updated_at")
+      .single();
 
-    await Product.findByIdAndUpdate(id, {
-      rating: Math.round(avgRating * 10) / 10,
-      reviewCount: allReviews.length,
-    });
+    if (insertError) {
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          { error: "You have already reviewed this product" },
+          { status: 409 }
+        );
+      }
+      throw insertError;
+    }
+
+    const { data: allReviews } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("product_id", id);
+
+    const ratings = (allReviews || []).map((r) => r.rating);
+    const totalRating = ratings.reduce((sum, r) => sum + r, 0);
+    const avgRating =
+      ratings.length > 0 ? totalRating / ratings.length : reviewRating;
+
+    await supabase
+      .from("products")
+      .update({
+        rating: Math.round(avgRating * 10) / 10,
+        review_count: ratings.length,
+      })
+      .eq("id", id);
 
     return NextResponse.json(
-      { message: "Review added successfully", review },
+      {
+        message: "Review added successfully",
+        review: {
+          _id: review.id,
+          userId: session.userId,
+          productId: review.product_id,
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.created_at,
+          updatedAt: review.updated_at,
+        },
+      },
       { status: 201 }
     );
   } catch (error) {

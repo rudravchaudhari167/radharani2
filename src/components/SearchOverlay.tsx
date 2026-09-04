@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Search, X } from "lucide-react";
 
@@ -202,9 +203,12 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                         >
                           <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5">
                             {item.images?.[0] ? (
-                              <img
+                              <Image
                                 src={item.images[0]}
                                 alt={item.name}
+                                width={56}
+                                height={56}
+                                unoptimized
                                 className="h-full w-full object-cover"
                               />
                             ) : (

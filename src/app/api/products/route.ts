@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Product from "@/models/Product";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import {
+  productFromRow,
+  buildTextSearch,
+  type ProductRow,
+} from "@/lib/supabase-shapes";
 
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
-
     const { searchParams } = new URL(request.url);
 
     const search = searchParams.get("search") || "";
@@ -23,92 +25,84 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get("featured");
     const isNewArrival = searchParams.get("isNewArrival");
 
-    const filter: Record<string, unknown> = { isActive: true };
+    const supabase = getSupabaseServer();
+
+    let q = supabase
+      .from("products")
+      .select("*", { count: "exact" })
+      .eq("is_active", true);
 
     if (search) {
-      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(escaped, "i");
-      filter.$or = [
-        { name: regex },
-        { description: regex },
-        { tags: regex },
-      ];
+      q = q.or(buildTextSearch(search, ["name", "description", "tags::text"]));
     }
 
     if (category) {
       const validCategories = ["MEN", "WOMEN", "UNISEX", "KIDS", "ACCESSORIES"];
       if (validCategories.includes(category.toUpperCase())) {
-        filter.category = category.toUpperCase();
+        q = q.eq("category", category.toUpperCase());
       }
     }
 
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) {
-        (filter.price as Record<string, number>).$gte = Math.max(
-          0,
-          parseFloat(minPrice)
-        );
-      }
-      if (maxPrice) {
-        (filter.price as Record<string, number>).$lte = Math.max(
-          0,
-          parseFloat(maxPrice)
-        );
-      }
+    if (minPrice) {
+      q = q.gte("price", Math.max(0, parseFloat(minPrice)));
+    }
+
+    if (maxPrice) {
+      q = q.lte("price", Math.max(0, parseFloat(maxPrice)));
     }
 
     if (size) {
-      filter.sizes = { $in: [size.toUpperCase()] };
+      q = q.contains("sizes", [size.toUpperCase()]);
     }
 
     if (color) {
-      filter["colors.name"] = new RegExp(`^${color}$`, "i");
+      q = q.contains("colors", [{ name: color }]);
     }
 
     if (featured === "true") {
-      filter.featured = true;
+      q = q.eq("featured", true);
     }
 
     if (isNewArrival === "true") {
-      filter.isNewArrival = true;
+      q = q.eq("is_new_arrival", true);
     }
 
-    let sortOption: Record<string, 1 | -1> = { createdAt: -1 };
     switch (sort) {
       case "popular":
-        sortOption = { reviewCount: -1, rating: -1 };
-        break;
-      case "newest":
-        sortOption = { createdAt: -1 };
+        q = q
+          .order("review_count", { ascending: false })
+          .order("rating", { ascending: false });
         break;
       case "price-asc":
-        sortOption = { price: 1 };
+        q = q.order("price", { ascending: true });
         break;
       case "price-desc":
-        sortOption = { price: -1 };
+        q = q.order("price", { ascending: false });
         break;
       case "rating":
-        sortOption = { rating: -1 };
+        q = q.order("rating", { ascending: false });
         break;
       default:
-        sortOption = { createdAt: -1 };
+        q = q.order("created_at", { ascending: false });
     }
 
-    const skip = (page - 1) * limit;
+    const { data, error, count } = await q.range(
+      (page - 1) * limit,
+      page * limit - 1
+    );
 
-    const [products, total] = await Promise.all([
-      Product.find(filter).sort(sortOption).skip(skip).limit(limit).lean(),
-      Product.countDocuments(filter),
-    ]);
+    if (error) {
+      throw error;
+    }
 
-    const totalPages = Math.ceil(total / limit);
+    const products = ((data as ProductRow[]) || []).map(productFromRow);
+    const total = count ?? 0;
 
     return NextResponse.json({
       products,
       total,
       page,
-      totalPages,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     console.error("Error in GET /api/products:", error);

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Cart from "@/models/Cart";
-import Address from "@/models/Address";
-import Coupon from "@/models/Coupon";
-import Product from "@/models/Product";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { couponFromRow } from "@/lib/supabase-shapes";
 import { createRazorpayOrder, isPaymentSandbox } from "@/lib/razorpay";
 import { getServerSession } from "@/lib/auth";
 
@@ -20,8 +17,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    await dbConnect();
 
     let body: Record<string, unknown>;
     try {
@@ -42,10 +37,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const address = await Address.findOne({
-      _id: addressId.trim(),
-      userId: session.userId,
-    });
+    const supabase = getSupabaseServer();
+
+    const { data: address } = await supabase
+      .from("addresses")
+      .select("id")
+      .eq("id", addressId.trim())
+      .eq("user_id", session.userId)
+      .maybeSingle();
 
     if (!address) {
       return NextResponse.json(
@@ -54,29 +53,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cart = await Cart.findOne({ userId: session.userId });
-    if (!cart || cart.items.length === 0) {
+    const { data: cart } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("user_id", session.userId)
+      .maybeSingle();
+
+    if (!cart) {
       return NextResponse.json(
         { error: "Cart is empty" },
         { status: 400 }
       );
     }
 
-    const productIds = cart.items.map((item) => String(item.productId));
-    const products = await Product.find({
-      _id: { $in: productIds },
-      isActive: true,
-    }).lean();
+    const { data: cartItems } = await supabase
+      .from("cart_items")
+      .select("product_id, name, price, image, size, color, quantity")
+      .eq("cart_id", cart.id);
+
+    if (!cartItems || cartItems.length === 0) {
+      return NextResponse.json(
+        { error: "Cart is empty" },
+        { status: 400 }
+      );
+    }
+
+    const productIds: string[] = cartItems
+      .map((i) => i.product_id)
+      .filter((id): id is string => Boolean(id));
+
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, name, price, images, stock, is_active")
+      .eq("is_active", true)
+      .in("id", productIds.length ? productIds : [""]);
 
     const productMap = new Map(
-      products.map((p) => [String(p._id), p])
+      (products || []).map((p) => [p.id, p])
     );
 
     let subtotal = 0;
-    const orderItems = [];
+    const orderItems: Array<{
+      productId: string;
+      name: string;
+      price: number;
+      image: string;
+      size: string;
+      color: string;
+      quantity: number;
+    }> = [];
 
-    for (const item of cart.items) {
-      const product = productMap.get(String(item.productId));
+    for (const item of cartItems) {
+      const product = productMap.get(item.product_id || "");
 
       if (!product) {
         return NextResponse.json(
@@ -94,22 +122,21 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const itemTotal = product.price * item.quantity;
+      const itemTotal = Number(product.price) * item.quantity;
       subtotal += itemTotal;
 
       orderItems.push({
-        productId: String(product._id),
+        productId: product.id,
         name: product.name,
-        price: product.price,
-        image: product.images[0] || "",
+        price: Number(product.price),
+        image: product.images?.[0] || "",
         size: item.size,
         color: item.color,
         quantity: item.quantity,
       });
     }
 
-    const method =
-      shippingMethod === "EXPRESS" ? "EXPRESS" : "STANDARD";
+    const method = shippingMethod === "EXPRESS" ? "EXPRESS" : "STANDARD";
     const shipping =
       method === "EXPRESS"
         ? SHIPPING_EXPRESS
@@ -121,28 +148,33 @@ export async function POST(request: NextRequest) {
     let appliedCouponCode = "";
 
     if (typeof couponCode === "string" && couponCode.trim()) {
-      const coupon = await Coupon.findOne({
-        code: couponCode.trim().toUpperCase(),
-      });
+      const { data: couponRow } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", couponCode.trim().toUpperCase())
+        .maybeSingle();
 
-      if (coupon && coupon.active && new Date(coupon.expiryDate) >= new Date()) {
-        if (subtotal >= coupon.minimumOrder) {
-          if (coupon.usageLimit <= 0 || coupon.usedCount < coupon.usageLimit) {
-            if (coupon.discountType === "PERCENTAGE") {
-              discount = Math.round((subtotal * coupon.discountValue) / 100);
-              if (coupon.maximumDiscount > 0) {
-                discount = Math.min(discount, coupon.maximumDiscount);
+      if (couponRow) {
+        const coupon = couponFromRow(couponRow);
+        if (coupon.active && new Date(coupon.expiryDate) >= new Date()) {
+          if (subtotal >= coupon.minimumOrder) {
+            if (coupon.usageLimit <= 0 || coupon.usedCount < coupon.usageLimit) {
+              if (coupon.discountType === "PERCENTAGE") {
+                discount = Math.round((subtotal * coupon.discountValue) / 100);
+                if (coupon.maximumDiscount > 0) {
+                  discount = Math.min(discount, coupon.maximumDiscount);
+                }
+              } else {
+                discount = Math.min(coupon.discountValue, subtotal);
               }
-            } else {
-              discount = Math.min(coupon.discountValue, subtotal);
+              appliedCouponCode = coupon.code;
             }
-            appliedCouponCode = coupon.code;
           }
         }
       }
     }
 
-    const total = Math.max(0, subtotal - discount + shipping);
+    const total = Math.max(0, Math.round(subtotal - discount + shipping));
     const amountInPaise = Math.round(total * 100);
 
     let razorpayOrderId: string;
@@ -158,22 +190,22 @@ export async function POST(request: NextRequest) {
       razorpayOrderId = razorpayOrder.id;
     }
 
-    await Cart.findOneAndUpdate(
-      { userId: session.userId },
-      {
-        checkoutPending: {
-          addressId: addressId.trim(),
-          shippingMethod: method,
-          couponCode: appliedCouponCode || undefined,
-          subtotal,
-          discount,
+    await supabase
+      .from("cart_checkout_pending")
+      .upsert(
+        {
+          cart_id: cart.id,
+          address_id: addressId.trim(),
+          shipping_method: method,
+          coupon_code: appliedCouponCode || null,
+          subtotal: Math.round(subtotal),
+          discount: Math.round(discount),
           shipping,
           total,
-          razorpayOrderId,
-          createdAt: new Date(),
+          razorpay_order_id: razorpayOrderId,
         },
-      }
-    );
+        { onConflict: "cart_id" }
+      );
 
     return NextResponse.json({
       razorpayOrderId,
@@ -181,8 +213,8 @@ export async function POST(request: NextRequest) {
       currency: "INR",
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       sandbox: isPaymentSandbox(),
-      subtotal,
-      discount,
+      subtotal: Math.round(subtotal),
+      discount: Math.round(discount),
       shipping,
       total,
       shippingMethod: method,

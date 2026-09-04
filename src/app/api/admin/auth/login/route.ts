@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import User from "@/models/User";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import {
   comparePassword,
   generateToken,
@@ -42,28 +41,6 @@ function pruneExpiredAttempts(now: number): void {
       failedAttempts.delete(key);
     }
   }
-}
-
-function serializeAdmin(user: {
-  _id: unknown;
-  name: string;
-  email: string;
-  phone: string;
-  role: "USER" | "ADMIN";
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}) {
-  return {
-    _id: String(user._id),
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    role: user.role,
-    isActive: user.isActive,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  };
 }
 
 export async function POST(request: NextRequest) {
@@ -112,15 +89,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
-    const user = await User.findOne({ email: normalizedEmail }).lean();
+    const { data: user } = await supabase
+      .from("users")
+      .select("id, name, email, phone, role, is_active, password_hash, created_at, updated_at")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
 
     const isValid =
       !!user &&
       user.role === "ADMIN" &&
-      user.isActive &&
-      (await comparePassword(password, user.passwordHash));
+      user.is_active &&
+      (await comparePassword(password, user.password_hash || ""));
 
     if (!isValid) {
       const current = failedAttempts.get(ip);
@@ -138,7 +119,7 @@ export async function POST(request: NextRequest) {
     failedAttempts.delete(ip);
 
     const token = generateToken({
-      _id: user._id,
+      _id: user.id,
       email: user.email,
       role: user.role,
     });
@@ -146,7 +127,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: "Login successful",
-      admin: serializeAdmin(user),
+      admin: {
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+      },
     });
   } catch (error) {
     console.error("Error in POST /api/admin/auth/login:", error);

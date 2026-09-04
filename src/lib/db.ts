@@ -11,12 +11,6 @@ declare global {
 
 const MONGODB_URI = process.env.DATABASE_URL || "";
 
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the DATABASE_URL environment variable inside .env.local"
-  );
-}
-
 type MongooseCache = {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -33,11 +27,19 @@ if (typeof globalThis !== "undefined" && !globalThis.mongooseCache) {
 
 /**
  * Connects to MongoDB using mongoose with an in-memory connection cache.
- * Reuses an existing connection if one is already established.
+ * Reuses an existing connection if one is already established. Throws only
+ * when actually invoked (never at module import) so builds are not broken by
+ * missing credentials.
  */
 export async function connectToDatabase(): Promise<typeof mongoose> {
   if (cached.conn) {
     return cached.conn;
+  }
+
+  if (!MONGODB_URI) {
+    throw new Error(
+      "DATABASE_URL is not configured. Set DATABASE_URL or switch to Supabase."
+    );
   }
 
   if (!cached.promise) {

@@ -5,18 +5,18 @@ import type { Orders } from "razorpay/dist/types/orders";
 const KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
 const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";
 
-if (!KEY_ID || !KEY_SECRET) {
-  throw new Error(
-    "Please define NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables inside .env.local"
-  );
-}
-
 /**
- * Lazily-initialized Razorpay client instance.
+ * Lazily-initialized Razorpay client instance. Throws only when actually
+ * invoked (never at module import) so builds are not broken by missing keys.
  */
 let razorpayInstance: Razorpay | null = null;
 
 export function getRazorpayInstance(): Razorpay {
+  if (!KEY_ID || !KEY_SECRET) {
+    throw new Error(
+      "Please define NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables inside .env.local"
+    );
+  }
   if (!razorpayInstance) {
     razorpayInstance = new Razorpay({
       key_id: KEY_ID,

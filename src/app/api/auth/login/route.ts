@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import User from "@/models/User";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { type UserRow } from "@/lib/supabase-shapes";
 import {
   comparePassword,
   generateToken,
@@ -40,8 +40,8 @@ function serializeUser(user: {
   phone: string;
   role: "USER" | "ADMIN";
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }) {
   return {
     _id: String(user._id),
@@ -109,14 +109,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const query =
+    const normalized =
       type === "email"
-        ? { email: rawIdentifier.trim().toLowerCase() }
-        : { phone: normalizePhone(rawIdentifier.trim()) ?? "__invalid__" };
+        ? rawIdentifier.trim().toLowerCase()
+        : normalizePhone(rawIdentifier.trim()) ?? "__invalid__";
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
-    const user = await User.findOne(query).lean();
+    let userQuery = supabase.from("users").select("*");
+    if (type === "email") {
+      userQuery = userQuery.eq("email", normalized);
+    } else {
+      userQuery = userQuery.eq("phone", normalized);
+    }
+
+    const { data: userRow } = await userQuery.maybeSingle();
+    const user = userRow as UserRow | null;
 
     if (!user) {
       return NextResponse.json(
@@ -125,7 +133,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!user.isActive) {
+    if (!user.is_active) {
       return NextResponse.json(
         { error: "Your account has been deactivated" },
         { status: 403 }
@@ -134,7 +142,7 @@ export async function POST(request: NextRequest) {
 
     const passwordMatches = await comparePassword(
       password as string,
-      user.passwordHash
+      user.password_hash
     );
 
     if (!passwordMatches) {
@@ -145,7 +153,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken({
-      _id: user._id,
+      _id: user.id,
       email: user.email,
       role: user.role,
     });
@@ -153,7 +161,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: "Login successful",
-      user: serializeUser(user),
+      user: serializeUser({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone ?? "",
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+      }),
     });
   } catch (error) {
     console.error("Error in POST /api/auth/login:", error);

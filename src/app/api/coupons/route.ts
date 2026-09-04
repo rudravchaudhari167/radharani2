@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Coupon from "@/models/Coupon";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { couponFromRow } from "@/lib/supabase-shapes";
 import { getServerSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -12,8 +12,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    await dbConnect();
 
     let body: Record<string, unknown>;
     try {
@@ -41,16 +39,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const coupon = await Coupon.findOne({
-      code: code.trim().toUpperCase(),
-    });
+    const supabase = getSupabaseServer();
 
-    if (!coupon) {
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", code.trim().toUpperCase())
+      .maybeSingle();
+
+    if (error || !data) {
       return NextResponse.json(
         { error: "Invalid coupon code" },
         { status: 404 }
       );
     }
+
+    const coupon = couponFromRow(data);
 
     if (!coupon.active) {
       return NextResponse.json(

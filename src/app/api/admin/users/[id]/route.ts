@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { getServerSession } from "@/lib/auth";
-import User from "@/models/User";
-import AuditLog from "@/models/AuditLog";
 
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -23,7 +21,6 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await dbConnect();
     const { id } = await params;
 
     let body: Record<string, unknown>;
@@ -40,50 +37,61 @@ export async function PUT(
       );
     }
 
-    const user = await User.findById(id);
+    const supabase = getSupabaseServer();
+
+    const { data: user } = await supabase
+      .from("users")
+      .select("id, name, email, phone, role, is_active, created_at, updated_at")
+      .eq("id", id)
+      .maybeSingle();
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (user.role === "ADMIN" && String(user._id) === String(session.userId)) {
+    if (user.role === "ADMIN" && String(user.id) === String(session.userId)) {
       return NextResponse.json(
         { error: "Cannot deactivate your own account" },
         { status: 400 }
       );
     }
 
-    const previousActive = user.isActive;
+    const previousActive = user.is_active;
+    let newActive = previousActive;
     if (body.isActive !== undefined && typeof body.isActive === "boolean") {
-      user.isActive = body.isActive;
+      newActive = body.isActive;
     }
 
-    await user.save();
+    await supabase
+      .from("users")
+      .update({ is_active: newActive, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
 
-    await AuditLog.create({
-      adminId: session.userId,
-      adminEmail: session.email,
+    await supabase.from("audit_logs").insert({
+      admin_id: session.userId,
+      admin_email: session.email,
       action: "USER_STATUS_UPDATED",
       target: `User:${id}`,
       details: {
         userName: user.name,
         userEmail: user.email,
-        isActiveChanged: previousActive !== user.isActive,
+        isActiveChanged: previousActive !== newActive,
         previousActive,
-        newActive: user.isActive,
+        newActive,
       },
-      ipAddress: getClientIp(request),
+      ip_address: getClientIp(request),
     });
 
     return NextResponse.json({
       user: {
-        _id: user._id,
+        _id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        isActive: newActive,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
       },
     });
   } catch (error) {

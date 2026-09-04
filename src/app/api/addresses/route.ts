@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Address from "@/models/Address";
+import { randomUUID } from "crypto";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { addressFromRow, type AddressRow } from "@/lib/supabase-shapes";
 import { getServerSession } from "@/lib/auth";
 
 export async function GET() {
@@ -13,11 +14,16 @@ export async function GET() {
       );
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
-    const addresses = await Address.find({ userId: session.userId })
-      .sort({ isDefault: -1, createdAt: -1 })
-      .lean();
+    const { data: rows } = await supabase
+      .from("addresses")
+      .select("id, user_id, full_name, phone, email, address_line1, address_line2, city, state, pincode, landmark, type, is_default, created_at, updated_at")
+      .eq("user_id", session.userId)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    const addresses = ((rows as AddressRow[] | null) || []).map(addressFromRow);
 
     return NextResponse.json({ addresses });
   } catch (error) {
@@ -38,8 +44,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    await dbConnect();
 
     let body: Record<string, unknown>;
     try {
@@ -110,33 +114,46 @@ export async function POST(request: NextRequest) {
 
     const validTypes = ["HOME", "WORK", "OTHER"];
     const addressType = validTypes.includes(type as string)
-      ? (type as "HOME" | "WORK" | "OTHER")
+      ? ((type as string) as "HOME" | "WORK" | "OTHER")
       : "HOME";
 
-    const address = await Address.create({
-      userId: session.userId,
-      fullName: (fullName as string).trim(),
-      phone: (phone as string).trim(),
-      email: (email as string).trim(),
-      addressLine1: (addressLine1 as string).trim(),
-      addressLine2: typeof addressLine2 === "string" ? addressLine2.trim() : "",
-      city: (city as string).trim(),
-      state: (state as string).trim(),
-      pincode: (pincode as string).trim(),
-      landmark: typeof landmark === "string" ? landmark.trim() : "",
-      type: addressType,
-      isDefault: isDefault === true,
-    });
+    const makeDefault = isDefault === true;
 
-    if (isDefault === true) {
-      await Address.updateMany(
-        { userId: session.userId, _id: { $ne: address._id } },
-        { isDefault: false }
-      );
+    const supabase = getSupabaseServer();
+
+    if (makeDefault) {
+      await supabase
+        .from("addresses")
+        .update({ is_default: false, updated_at: new Date().toISOString() })
+        .eq("user_id", session.userId);
+    }
+
+    const { data: created, error: insertError } = await supabase
+      .from("addresses")
+      .insert({
+        id: randomUUID(),
+        user_id: session.userId,
+        full_name: (fullName as string).trim(),
+        phone: (phone as string).trim(),
+        email: (email as string).trim(),
+        address_line1: (addressLine1 as string).trim(),
+        address_line2: typeof addressLine2 === "string" ? addressLine2.trim() : "",
+        city: (city as string).trim(),
+        state: (state as string).trim(),
+        pincode: (pincode as string).trim(),
+        landmark: typeof landmark === "string" ? landmark.trim() : "",
+        type: addressType,
+        is_default: makeDefault,
+      })
+      .select("id, user_id, full_name, phone, email, address_line1, address_line2, city, state, pincode, landmark, type, is_default, created_at, updated_at")
+      .single();
+
+    if (insertError) {
+      throw insertError;
     }
 
     return NextResponse.json(
-      { message: "Address added successfully", address },
+      { message: "Address added successfully", address: addressFromRow(created as AddressRow) },
       { status: 201 }
     );
   } catch (error) {
@@ -158,8 +175,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    await dbConnect();
-
     let body: Record<string, unknown>;
     try {
       body = await request.json();
@@ -179,10 +194,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const address = await Address.findOne({
-      _id: addressId.trim(),
-      userId: session.userId,
-    });
+    const supabase = getSupabaseServer();
+
+    const { data: address } = await supabase
+      .from("addresses")
+      .select("id")
+      .eq("id", addressId.trim())
+      .eq("user_id", session.userId)
+      .maybeSingle();
 
     if (!address) {
       return NextResponse.json(
@@ -191,34 +210,48 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (typeof fields.fullName === "string") address.fullName = fields.fullName.trim();
-    if (typeof fields.phone === "string") address.phone = fields.phone.trim();
-    if (typeof fields.email === "string") address.email = fields.email.trim();
-    if (typeof fields.addressLine1 === "string") address.addressLine1 = fields.addressLine1.trim();
-    if (typeof fields.addressLine2 === "string") address.addressLine2 = fields.addressLine2.trim();
-    if (typeof fields.city === "string") address.city = fields.city.trim();
-    if (typeof fields.state === "string") address.state = fields.state.trim();
-    if (typeof fields.pincode === "string") address.pincode = fields.pincode.trim();
-    if (typeof fields.landmark === "string") address.landmark = fields.landmark.trim();
+    const update: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (typeof fields.fullName === "string") update.full_name = fields.fullName.trim();
+    if (typeof fields.phone === "string") update.phone = fields.phone.trim();
+    if (typeof fields.email === "string") update.email = fields.email.trim();
+    if (typeof fields.addressLine1 === "string") update.address_line1 = fields.addressLine1.trim();
+    if (typeof fields.addressLine2 === "string") update.address_line2 = fields.addressLine2.trim();
+    if (typeof fields.city === "string") update.city = fields.city.trim();
+    if (typeof fields.state === "string") update.state = fields.state.trim();
+    if (typeof fields.pincode === "string") update.pincode = fields.pincode.trim();
+    if (typeof fields.landmark === "string") update.landmark = fields.landmark.trim();
 
     const validTypes = ["HOME", "WORK", "OTHER"];
     if (typeof fields.type === "string" && validTypes.includes(fields.type)) {
-      address.type = fields.type as "HOME" | "WORK" | "OTHER";
+      update.type = fields.type;
     }
 
     if (typeof fields.isDefault === "boolean") {
-      address.isDefault = fields.isDefault;
+      update.is_default = fields.isDefault;
       if (fields.isDefault) {
-        await Address.updateMany(
-          { userId: session.userId, _id: { $ne: address._id } },
-          { isDefault: false }
-        );
+        await supabase
+          .from("addresses")
+          .update({ is_default: false, updated_at: new Date().toISOString() })
+          .eq("user_id", session.userId)
+          .neq("id", address.id);
       }
     }
 
-    await address.save();
+    await supabase.from("addresses").update(update).eq("id", address.id);
 
-    return NextResponse.json({ message: "Address updated successfully", address });
+    const { data: updated } = await supabase
+      .from("addresses")
+      .select("id, user_id, full_name, phone, email, address_line1, address_line2, city, state, pincode, landmark, type, is_default, created_at, updated_at")
+      .eq("id", address.id)
+      .maybeSingle();
+
+    return NextResponse.json({
+      message: "Address updated successfully",
+      address: updated ? addressFromRow(updated as AddressRow) : undefined,
+    });
   } catch (error) {
     console.error("Error in PUT /api/addresses:", error);
     return NextResponse.json(

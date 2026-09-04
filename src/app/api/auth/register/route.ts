@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import User from "@/models/User";
+import { randomUUID } from "crypto";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { userFromRow, type UserRow } from "@/lib/supabase-shapes";
 import {
   hashPassword,
   generateToken,
@@ -16,8 +17,8 @@ export interface PublicUser {
   phone: string;
   role: "USER" | "ADMIN";
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 function normalizePhone(phone: string): string | null {
@@ -51,8 +52,8 @@ function serializeUser(user: {
   phone: string;
   role: "USER" | "ADMIN";
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }): PublicUser {
   return {
     _id: String(user._id),
@@ -137,12 +138,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
-    const [existingEmail, existingPhone] = await Promise.all([
-      User.findOne({ email: normalizedEmail }).select("_id").lean(),
-      User.findOne({ phone: normalizedPhone }).select("_id").lean(),
-    ]);
+    const { data: existingEmail } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
 
     if (existingEmail) {
       return NextResponse.json(
@@ -150,6 +152,12 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
+
+    const { data: existingPhone } = await supabase
+      .from("users")
+      .select("id")
+      .eq("phone", normalizedPhone)
+      .maybeSingle();
 
     if (existingPhone) {
       return NextResponse.json(
@@ -159,27 +167,45 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password as string);
+    const id = randomUUID();
 
-    const user = await User.create({
-      name: trimmedName,
-      email: normalizedEmail,
-      phone: normalizedPhone,
-      passwordHash,
-      role: "USER",
-      isActive: true,
-    });
+    const { data: user, error } = await supabase
+      .from("users")
+      .insert({
+        id,
+        name: trimmedName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        password_hash: passwordHash,
+        role: "USER",
+        is_active: true,
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "An account with this email already exists" },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
+
+    const mapped = userFromRow(user as UserRow);
 
     const token = generateToken({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
+      _id: mapped._id,
+      email: mapped.email,
+      role: mapped.role,
     });
     await setAuthCookie(token);
 
     return NextResponse.json(
       {
         message: "Account created successfully",
-        user: serializeUser(user),
+        user: serializeUser(mapped),
       },
       { status: 201 }
     );

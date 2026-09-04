@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Product from "@/models/Product";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { buildTextSearch } from "@/lib/supabase-shapes";
 
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
-
     const query = request.nextUrl.searchParams.get("q");
 
     if (!query || query.trim().length === 0) {
@@ -14,19 +12,30 @@ export async function GET(request: NextRequest) {
 
     const searchTerm = query.trim();
 
-    const products = await Product.find({
-      isActive: true,
-      $or: [
-        { name: { $regex: searchTerm, $options: "i" } },
-        { description: { $regex: searchTerm, $options: "i" } },
-        { tags: { $in: [new RegExp(searchTerm, "i")] } },
-      ],
-    })
-      .select("name slug price images category tags")
-      .limit(10)
-      .lean();
+    const supabase = getSupabaseServer();
 
-    return NextResponse.json({ suggestions: products });
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, name, slug, price, images, category, tags")
+      .eq("is_active", true)
+      .or(buildTextSearch(searchTerm, ["name", "description"]))
+      .limit(10);
+
+    if (error) {
+      throw error;
+    }
+
+    const suggestions = (data || []).map((p) => ({
+      _id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      images: p.images || [],
+      category: p.category,
+      tags: p.tags || [],
+    }));
+
+    return NextResponse.json({ suggestions });
   } catch (error) {
     console.error("Error in GET /api/search:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

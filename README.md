@@ -13,7 +13,7 @@ A production-quality modern 3D fashion e-commerce website inspired by Radha & Kr
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS v4, Framer Motion |
 | 3D | Three.js, React Three Fiber, Drei |
 | State | Zustand |
-| Database | MongoDB + Mongoose |
+| Database | Supabase (PostgreSQL) + PostgREST |
 | Payments | Razorpay (test mode) |
 | Auth | Custom JWT with httpOnly cookies |
 | Icons | Lucide React |
@@ -25,7 +25,7 @@ A production-quality modern 3D fashion e-commerce website inspired by Radha & Kr
 ### Prerequisites
 
 - Node.js 18+
-- MongoDB 6+ (local or Atlas)
+- A Supabase project (free tier is fine) — create one at https://supabase.com
 - Razorpay test account (for real payment testing, optional)
 
 ### 1. Clone & Install
@@ -44,81 +44,55 @@ cp .env.example .env.local
 Edit `.env.local` and fill in:
 
 ```bash
-DATABASE_URL=mongodb://localhost:27017/vrindav
+# Supabase (required — all data lives here).
+# Get these from https://supabase.com/dashboard → Project → Settings → API
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+
 NEXTAUTH_SECRET=generate-a-64-char-random-string
-NEXTAUTH_URL=http://localhost:3000
 
 # Razorpay (test mode — get from https://dashboard.razorpay.com)
 RAZORPAY_KEY_ID=rzp_test_XXXXXXXXXXXXXXX
 RAZORPAY_KEY_SECRET=XXXXXXXXXXXXXXXXXXXX
 NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_XXXXXXXXXXXXXXX
-
-# Optional: admin seeded via create-admin script
-ADMIN_EMAIL=admin@vrindav.com
-ADMIN_PASSWORD_HASH=$2b$12$...
-
-# Supabase Auth (optional — leave empty to keep MongoDB/JWT auth only).
-# Get these from https://supabase.com/dashboard → Project → Settings → API
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 > **Important:** Without Razorpay test keys the app runs in *sandbox mode*
 > for the payment flow. In sandbox mode, the full checkout → verify → order
 > journey completes locally without real payment processing.
 
-### Supabase Auth (optional)
+### Supabase Setup (Database + Auth)
 
-VRINDAV ships with two authentication backends that work side by side:
+VRINDAV stores all data in Supabase Postgres and uses its table-level auth
+for the optional **"Continue with Google"** flow. All customer/admin
+authentication still uses VRINDAV's own **bcrypt + JWT** cookie.
 
-1. **MongoDB + JWT (default)** — email/phone registration, bcrypt-hashed
-   passwords, httpOnly cookies. Fully functional with zero external setup.
-2. **Supabase Auth (optional)** — add `NEXT_PUBLIC_SUPABASE_URL` and
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local` to enable a
-   **"Continue with Google"** button on the login and register pages. Supabase
-   handles the OAuth/email-password session; VRINDAV then **upserts the user
-   into MongoDB** with `role: USER` and issues the same httpOnly JWT cookie, so
-   carts, orders and admin checks keep working unchanged.
+1. Run `supabase/schema.sql` in the **Supabase SQL editor**
+   (Project → SQL → New query → paste → Run). This creates all tables,
+   enums, indexes, RLS policies, and RPC helpers.
+2. Set the three Supabase environment variables above.
+3. `SUPABASE_SERVICE_ROLE_KEY` is used **server-side only** (never in the
+   browser) and powers all API routes, the seed script, and `create-admin`.
 
-When Supabase is enabled:
-- Signing up or in through Supabase always provisions the account with
-  `role: USER` in MongoDB. Admins can **never** be created through Supabase.
-- Google sign-in completes at `/api/auth/supabase/callback`, which exchanges
-  the OAuth code, creates/updates the MongoDB user, and redirects back to the
-  app signed in.
-- Leave both keys empty to disable Supabase entirely and use only
-  MongoDB/JWT auth (recommended for a fully offline/local deployment).
+When Supabase Auth is enabled:
+- A "Continue with Google" button appears on `/login` and `/register`; the
+  callback at `/api/auth/supabase/callback` upserts the user into the Supabase
+  `users` table and issues the same httpOnly JWT cookie.
+- Users created through Supabase are always `role: USER`; admins can never be
+  created through that flow.
+- Leave the keys empty to disable Google sign-in; email/phone + password (JWT)
+  authentication keeps working against the same `users` table.
 
-### 3. MongoDB Setup
-
-**Option A — Local MongoDB**
-
-```bash
-# Install MongoDB (macOS)
-brew install mongodb-community@7.0
-brew services start mongodb-community@7.0
-
-# Or with Docker
-docker run -d -p 27017:27017 --name vrindav mongo:7
-```
-
-**Option B — MongoDB Atlas**
-
-Set `DATABASE_URL` in `.env.local`:
-
-```
-DATABASE_URL=mongodb+srv://<user>:<pass>@cluster.mongodb.net/vrindav
-```
-
-### 4. Seed Products
+### 3. Seed Products
 
 ```bash
 npm run seed
 ```
 
-Seeds **33 products** across MEN, WOMEN, UNISEX, KIDS, ACCESSORIES and **4 coupon codes** (WELCOME10, KRISHNA10, FESTIVE20, SAVE500).
+Seeds **33 products** across MEN, WOMEN, UNISEX, KIDS, ACCESSORIES and **4 coupon codes** (WELCOME10, KRISHNA10, FESTIVE20, SAVE500). Requires the three Supabase env vars above (it uses the service-role key).
 
-### 5. Create Admin Account
+### 4. Create Admin Account
 
 ```bash
 npm run create-admin
@@ -141,7 +115,7 @@ echo -e "admin@vrindav.com\nYourSecureP@ss" | npm run create-admin
 > rejected. Passwords are bcrypt-hashed (12 rounds). Admin never accepts
 > phone login and is never accessible through customer registration.
 
-### 6. Run Development Server
+### 5. Run Development Server
 
 ```bash
 npm run dev
@@ -255,17 +229,17 @@ vrindav/
 │   │   ├── RosePetal/    # Canvas petal cursor
 │   │   ├── ProductCard/  # Product cards with 3D tilt
 │   │   └── ...           # AccountLayout, AdminLayout, etc.
-│   ├── lib/              # Utilities, auth, db, stores
-│   │   ├── db.ts         # MongoDB connection
-│   │   ├── auth.ts       # JWT auth helpers
+│   ├── lib/              # Utilities, auth, supabase clients, stores
+│   │   ├── supabase-server.ts  # Server (service-role) + anon clients
+│   │   ├── supabase-shapes.ts  # Postgres row → API camelCase mappers
+│   │   ├── auth.ts       # JWT auth helpers (bcrypt + cookies)
 │   │   ├── razorpay.ts   # Razorpay client
 │   │   ├── store.ts      # Auth Zustand store
 │   │   ├── cart-store.ts # Cart Zustand store
 │   │   └── wishlist-store.ts
-│   └── models/           # Mongoose schemas
 ├── scripts/
-│   ├── seed.ts           # Product + coupon seeder
-│   └── create-admin.ts   # Interactive admin creator
+│   ├── seed.ts           # Product + coupon seeder (Supabase)
+│   └── create-admin.ts   # Interactive admin creator (Supabase)
 ├── .env.example          # Env var template
 └── README.md
 ```
@@ -276,14 +250,13 @@ vrindav/
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | ✅ | MongoDB connection URI |
-| `NEXTAUTH_SECRET` | ✅ | JWT secret (random 32+ char string) |
-| `NEXTAUTH_URL` | ✅ | App base URL (`http://localhost:3000`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anon/publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Server-side service role key (never exposed) |
+| `NEXTAUTH_SECRET` | ✅ | JWT signing secret (random 32+ char string) |
 | `RAZORPAY_KEY_ID` | ⚠️ | Razorpay test key (sandbox if placeholder) |
 | `RAZORPAY_KEY_SECRET` | ⚠️ | Razorpay test secret (sandbox if placeholder) |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | ⚠️ | Client-side Razorpay key |
-| `ADMIN_EMAIL` | ❌ | Set after running `create-admin` |
-| `ADMIN_PASSWORD_HASH` | ❌ | Set after running `create-admin` |
 
 ---
 

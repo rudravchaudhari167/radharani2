@@ -8,7 +8,6 @@ import {
   useScroll,
   useSpring,
   useTransform,
-  type MotionValue,
 } from "framer-motion";
 import {
   ArrowRight,

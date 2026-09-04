@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { getServerSession } from "@/lib/auth";
-import User from "@/models/User";
-import connectToDatabase from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,9 +40,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectToDatabase();
+    const supabase = getSupabaseServer();
 
-    const user = await User.findById(session.userId);
+    const { data: user } = await supabase
+      .from("users")
+      .select("id, password_hash")
+      .eq("id", session.userId)
+      .maybeSingle();
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const passwordMatch = await bcrypt.compare(
       currentPassword,
-      user.passwordHash
+      user.password_hash || ""
     );
 
     if (!passwordMatch) {
@@ -64,8 +67,10 @@ export async function POST(request: NextRequest) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    user.passwordHash = hashedPassword;
-    await user.save();
+    await supabase
+      .from("users")
+      .update({ password_hash: hashedPassword, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
 
     return NextResponse.json({ message: "Password updated successfully" });
   } catch (error) {

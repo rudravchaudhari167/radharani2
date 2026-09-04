@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Order from "@/models/Order";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import {
+  orderFromRow,
+  orderItemFromRow,
+  type OrderRow,
+  type OrderItemRow,
+} from "@/lib/supabase-shapes";
 import { getServerSession } from "@/lib/auth";
 
 export async function GET(
@@ -16,8 +21,6 @@ export async function GET(
       );
     }
 
-    await dbConnect();
-
     const { id } = await params;
 
     if (!id) {
@@ -27,10 +30,14 @@ export async function GET(
       );
     }
 
-    const order = await Order.findOne({
-      $or: [{ orderId: id }, { _id: id }],
-      userId: session.userId,
-    }).lean();
+    const supabase = getSupabaseServer();
+
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id, order_id, user_id, subtotal, discount, coupon_code, shipping, total, payment_status, payment_id, order_status, address, shipping_method, estimated_delivery, created_at, updated_at")
+      .eq("user_id", session.userId)
+      .or(`order_id.eq.${id},id.eq.${id}`)
+      .maybeSingle();
 
     if (!order) {
       return NextResponse.json(
@@ -39,7 +46,14 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ order });
+    const { data: itemRows } = await supabase
+      .from("order_items")
+      .select("id, order_id, product_id, name, price, image, size, color, quantity")
+      .eq("order_id", order.id);
+
+    const items = ((itemRows as OrderItemRow[] | null) || []).map(orderItemFromRow);
+
+    return NextResponse.json({ order: orderFromRow(order as OrderRow, items) });
   } catch (error) {
     console.error("Error in GET /api/orders/[id]:", error);
     return NextResponse.json(

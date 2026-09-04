@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Order from "@/models/Order";
+import { getSupabaseServer } from "@/lib/supabase-server";
 
 const ORDER_STATUSES = [
   "ORDER_PLACED",
@@ -28,8 +27,6 @@ export async function GET(
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
-    await dbConnect();
-
     const { orderId } = await params;
 
     if (!orderId) {
@@ -39,11 +36,15 @@ export async function GET(
       );
     }
 
-    const order = await Order.findOne({ orderId })
-      .select("orderId orderStatus paymentStatus shippingMethod estimatedDelivery createdAt")
-      .lean();
+    const supabase = getSupabaseServer();
 
-    if (!order) {
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("order_id, order_status, payment_status, shipping_method, estimated_delivery, created_at")
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    if (error || !order) {
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
@@ -51,7 +52,7 @@ export async function GET(
     }
 
     const currentStatusIndex = ORDER_STATUSES.indexOf(
-      order.orderStatus as (typeof ORDER_STATUSES)[number]
+      order.order_status as (typeof ORDER_STATUSES)[number]
     );
 
     const timeline = ORDER_STATUSES.map((status, index) => ({
@@ -62,12 +63,12 @@ export async function GET(
     }));
 
     return NextResponse.json({
-      orderId: order.orderId,
-      orderStatus: order.orderStatus,
-      paymentStatus: order.paymentStatus,
-      shippingMethod: order.shippingMethod,
-      estimatedDelivery: order.estimatedDelivery,
-      createdAt: order.createdAt,
+      orderId: order.order_id,
+      orderStatus: order.order_status,
+      paymentStatus: order.payment_status,
+      shippingMethod: order.shipping_method,
+      estimatedDelivery: order.estimated_delivery,
+      createdAt: order.created_at,
       timeline,
     });
   } catch (error) {

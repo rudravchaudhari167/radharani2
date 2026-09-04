@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
+import { randomUUID } from "crypto";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { productFromRow } from "@/lib/supabase-shapes";
 import { getServerSession } from "@/lib/auth";
-import Product, { type IColor, type IProduct } from "@/models/Product";
-import AuditLog from "@/models/AuditLog";
 
 function generateSlug(name: string): string {
   return name
@@ -20,6 +20,24 @@ function getClientIp(request: NextRequest): string {
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
+async function logAdminAction(
+  supabase: ReturnType<typeof getSupabaseServer>,
+  session: { userId: string; email: string },
+  action: string,
+  target: string,
+  details: Record<string, unknown>,
+  ip: string
+) {
+  await supabase.from("audit_logs").insert({
+    admin_id: session.userId,
+    admin_email: session.email,
+    action,
+    target,
+    details,
+    ip_address: ip,
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession();
@@ -30,7 +48,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
     const { searchParams } = request.nextUrl;
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -39,23 +57,26 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const isActive = searchParams.get("isActive");
 
-    const filter: Record<string, unknown> = {};
-    if (category) filter.category = category;
+    let query = supabase
+      .from("products")
+      .select("id, name, slug, description, price, old_price, category, subcategory, images, model_3d, sizes, colors, stock, sku, tags, featured, is_new_arrival, is_active, created_at, updated_at", { count: "exact" });
+    if (category) {
+      query = query.eq("category", category);
+    }
     if (isActive !== null && isActive !== undefined) {
-      filter.isActive = isActive === "true";
+      query = query.eq("is_active", isActive === "true");
     }
     if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { sku: { $regex: search, $options: "i" } },
-      ];
+      query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
     }
 
-    const skip = (page - 1) * limit;
-    const [products, total] = await Promise.all([
-      Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      Product.countDocuments(filter),
-    ]);
+    const { data: rows, count } = await query
+      .order("created_at", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    const products = ((rows as Parameters<typeof productFromRow>[0][] | null) || []).map(productFromRow);
+
+    const total = count ?? 0;
 
     return NextResponse.json({
       products,
@@ -81,8 +102,6 @@ export async function POST(request: NextRequest) {
     if (session.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    await dbConnect();
 
     let body: Record<string, unknown>;
     try {
@@ -113,47 +132,68 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "SKU is required" }, { status: 400 });
     }
 
-    let slug = generateSlug(name as string);
-    const existingSlug = await Product.findOne({ slug }).lean();
-    if (existingSlug) {
-      slug = `${slug}-${Date.now()}`;
-    }
+    const supabase = getSupabaseServer();
 
-    const existingSku = await Product.findOne({ sku: (sku as string).toUpperCase() }).lean();
+    const skuUpper = (sku as string).toUpperCase().trim();
+
+    const { data: existingSku } = await supabase
+      .from("products")
+      .select("id")
+      .eq("sku", skuUpper)
+      .maybeSingle();
     if (existingSku) {
       return NextResponse.json({ error: "A product with this SKU already exists" }, { status: 409 });
     }
 
-    const product = await Product.create({
-      name: (name as string).trim(),
-      slug,
-      description: description as string,
-      price: price as number,
-      oldPrice: typeof oldPrice === "number" ? (oldPrice as number) : undefined,
-      category: category as IProduct["category"],
-      subcategory: typeof subcategory === "string" ? subcategory : "",
-      images: (Array.isArray(images) ? images : []) as string[],
-      model3D: typeof model3D === "string" ? model3D : "",
-      sizes: (Array.isArray(sizes) ? sizes : []) as string[],
-      colors: (Array.isArray(colors) ? colors : []) as IColor[],
-      stock: typeof stock === "number" ? (stock as number) : 0,
-      sku: (sku as string).toUpperCase().trim(),
-      tags: (Array.isArray(tags) ? tags : []) as string[],
-      featured: typeof featured === "boolean" ? featured : false,
-      isNewArrival: typeof isNewArrival === "boolean" ? isNewArrival : false,
-      isActive: true,
-    });
+    let slug = generateSlug(name as string);
+    const { data: existingSlug } = await supabase
+      .from("products")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (existingSlug) {
+      slug = `${slug}-${Date.now()}`;
+    }
 
-    await AuditLog.create({
-      adminId: session.userId,
-      adminEmail: session.email,
-      action: "PRODUCT_CREATED",
-      target: `Product:${product._id}`,
-      details: { name: product.name, slug: product.slug, sku: product.sku, price: product.price },
-      ipAddress: getClientIp(request),
-    });
+    const { data: created, error: insertError } = await supabase
+      .from("products")
+      .insert({
+        id: randomUUID(),
+        name: (name as string).trim(),
+        slug,
+        description: description as string,
+        price: Math.round(price as number),
+        old_price: typeof oldPrice === "number" ? Math.round(oldPrice) : null,
+        category: category as string,
+        subcategory: typeof subcategory === "string" ? subcategory : "",
+        images: (Array.isArray(images) ? images : []) as string[],
+        model_3d: typeof model3D === "string" ? model3D : "",
+        sizes: (Array.isArray(sizes) ? sizes : []) as string[],
+        colors: (Array.isArray(colors) ? colors : []) as { name: string; hex: string }[],
+        stock: typeof stock === "number" ? Math.max(0, Math.floor(stock)) : 0,
+        sku: skuUpper,
+        tags: (Array.isArray(tags) ? tags : []) as string[],
+        featured: typeof featured === "boolean" ? featured : false,
+        is_new_arrival: typeof isNewArrival === "boolean" ? isNewArrival : false,
+        is_active: true,
+      })
+      .select("id, name, slug, description, price, old_price, category, subcategory, images, model_3d, sizes, colors, stock, sku, tags, featured, is_new_arrival, is_active, created_at, updated_at")
+      .single();
 
-    return NextResponse.json({ product }, { status: 201 });
+    if (insertError) {
+      throw insertError;
+    }
+
+    await logAdminAction(
+      supabase,
+      { userId: session.userId, email: session.email },
+      "PRODUCT_CREATED",
+      `Product:${created.id}`,
+      { name: created.name, slug: created.slug, sku: created.sku, price: created.price },
+      getClientIp(request)
+    );
+
+    return NextResponse.json({ product: productFromRow(created as Parameters<typeof productFromRow>[0]) }, { status: 201 });
   } catch (error) {
     console.error("Error in POST /api/admin/products:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

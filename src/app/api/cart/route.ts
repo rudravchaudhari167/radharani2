@@ -1,8 +1,93 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Cart, { type ICartItem } from "@/models/Cart";
-import Product from "@/models/Product";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { cartItemFromRow, type ProductRow } from "@/lib/supabase-shapes";
 import { getServerSession } from "@/lib/auth";
+
+async function getOrCreateCart(
+  supabase: ReturnType<typeof getSupabaseServer>,
+  userId: string
+): Promise<string> {
+  const { data: existing } = await supabase
+    .from("carts")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (existing) {
+    return existing.id;
+  }
+  const { data: created, error } = await supabase
+    .from("carts")
+    .insert({ user_id: userId })
+    .select("id")
+    .maybeSingle();
+  if (error && error.code !== "23505") {
+    throw error;
+  }
+  if (created) {
+    return created.id;
+  }
+  const { data: again } = await supabase
+    .from("carts")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!again) {
+    throw new Error("Could not create cart");
+  }
+  return again.id;
+}
+
+/** Fetch cart items joined with their product rows for the given cart. */
+async function fetchCartData(
+  supabase: ReturnType<typeof getSupabaseServer>,
+  cartId: string
+) {
+  const { data: items, error } = await supabase
+    .from("cart_items")
+    .select("id, cart_id, product_id, name, price, image, size, color, quantity")
+    .eq("cart_id", cartId);
+
+  if (error) {
+    throw error;
+  }
+
+  const productIds = [...new Set((items || []).map((i) => i.product_id).filter(Boolean))];
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, name, price, images, stock, is_active, slug")
+    .in("id", productIds.length ? productIds : [""]);
+
+  const map = new Map<string, ProductRow & { _id: string }>(
+    ((products as ProductRow[]) || []).map((p) => [p.id, p] as unknown as [string, ProductRow & { _id: string }])
+  );
+
+  const rawItems = (items || []).map((i) => ({
+    ...i,
+    product: map.get(i.product_id) || null,
+  }));
+
+  const validItems = rawItems.filter(
+    (item) => item.product && item.product.is_active !== false
+  );
+
+  if (validItems.length !== rawItems.length) {
+    const validIds = new Set(validItems.map((i) => i.id));
+    await supabase.from("cart_items").delete().in("id", [...rawItems.map((i) => i.id)].filter((id) => !validIds.has(id)));
+  }
+
+  return validItems.map((item) => {
+    const base = cartItemFromRow(item);
+    return {
+      ...base,
+      productId: item.product_id ?? "",
+      name: item.product?.name ?? base.name,
+      price: Number(item.product?.price) || base.price,
+      image: item.product?.images?.[0] || base.image,
+      stock: item.product?.stock,
+      slug: item.product?.slug,
+    };
+  });
+}
 
 export async function GET() {
   try {
@@ -14,38 +99,21 @@ export async function GET() {
       );
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
-    const cart = await Cart.findOne({ userId: session.userId })
-      .populate("items.productId", "name price images stock isActive")
-      .lean();
+    const { data: cart } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("user_id", session.userId)
+      .maybeSingle();
 
     if (!cart) {
       return NextResponse.json({ cart: { items: [] } });
     }
 
-    const validItems = (cart.items as unknown as Array<{
-      productId: string | { isActive?: boolean };
-      name: string;
-      price: number;
-      image: string;
-      size: string;
-      color: string;
-      quantity: number;
-    }>).filter(
-      (item) =>
-        item.productId &&
-        (item.productId as { isActive?: boolean }).isActive !== false
-    ) as ICartItem[];
+    const items = await fetchCartData(supabase, cart.id);
 
-    if (validItems.length !== cart.items.length) {
-      await Cart.findOneAndUpdate(
-        { userId: session.userId },
-        { items: validItems }
-      );
-    }
-
-    return NextResponse.json({ cart });
+    return NextResponse.json({ cart: { items } });
   } catch (error) {
     console.error("Error in GET /api/cart:", error);
     return NextResponse.json(
@@ -64,8 +132,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    await dbConnect();
 
     let body: Record<string, unknown>;
     try {
@@ -94,10 +160,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const product = await Product.findOne({
-      _id: productId.trim(),
-      isActive: true,
-    });
+    const supabase = getSupabaseServer();
+
+    const { data: product } = await supabase
+      .from("products")
+      .select("id, name, price, images, stock, is_active")
+      .eq("id", productId.trim())
+      .eq("is_active", true)
+      .maybeSingle();
 
     if (!product) {
       return NextResponse.json(
@@ -116,64 +186,46 @@ export async function POST(request: NextRequest) {
     const sizeStr = typeof size === "string" ? size : "";
     const colorStr = typeof color === "string" ? color : "";
 
-    const cart = await Cart.findOne({ userId: session.userId });
+    const cartId = await getOrCreateCart(supabase, session.userId);
 
-    if (!cart) {
-      const newCart = await Cart.create({
-        userId: session.userId,
-        items: [
-          {
-            productId: product._id,
-            name: product.name,
-            price: product.price,
-            image: product.images[0] || "",
-            size: sizeStr,
-            color: colorStr,
-            quantity: qty,
-          },
-        ],
-      });
+    const { data: existingItem } = await supabase
+      .from("cart_items")
+      .select("id, quantity")
+      .eq("cart_id", cartId)
+      .eq("product_id", product.id)
+      .eq("size", sizeStr)
+      .eq("color", colorStr)
+      .maybeSingle();
 
-      return NextResponse.json(
-        { message: "Item added to cart", cart: newCart },
-        { status: 201 }
-      );
-    }
-
-    const existingItemIndex = cart.items.findIndex(
-      (item) =>
-        String(item.productId) === String(product._id) &&
-        item.size === sizeStr &&
-        item.color === colorStr
-    );
-
-    if (existingItemIndex > -1) {
-      const newQty = cart.items[existingItemIndex].quantity + qty;
-
+    if (existingItem) {
+      const newQty = existingItem.quantity + qty;
       if (product.stock < newQty) {
         return NextResponse.json(
           { error: "Insufficient stock available" },
           { status: 400 }
         );
       }
-
-      cart.items[existingItemIndex].quantity = newQty;
+      await supabase
+        .from("cart_items")
+        .update({ quantity: newQty })
+        .eq("id", existingItem.id);
     } else {
-      cart.items.push({
-        productId: product._id,
+      await supabase.from("cart_items").insert({
+        cart_id: cartId,
+        product_id: product.id,
         name: product.name,
         price: product.price,
-        image: product.images[0] || "",
+        image: product.images?.[0] || "",
         size: sizeStr,
         color: colorStr,
         quantity: qty,
       });
     }
 
-    await cart.save();
+    const items = await fetchCartData(supabase, cartId);
 
     return NextResponse.json(
-      { message: "Item added to cart", cart },
+      { message: "Item added to cart", cart: { items } },
       { status: 201 }
     );
   } catch (error) {
@@ -195,8 +247,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    await dbConnect();
-
     let body: Record<string, unknown>;
     try {
       body = await request.json();
@@ -224,10 +274,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const product = await Product.findOne({
-      _id: productId.trim(),
-      isActive: true,
-    });
+    const supabase = getSupabaseServer();
+
+    const { data: product } = await supabase
+      .from("products")
+      .select("id, stock, is_active")
+      .eq("id", productId.trim())
+      .eq("is_active", true)
+      .maybeSingle();
 
     if (!product) {
       return NextResponse.json(
@@ -246,32 +300,40 @@ export async function PUT(request: NextRequest) {
     const sizeStr = typeof size === "string" ? size : "";
     const colorStr = typeof color === "string" ? color : "";
 
-    const cart = await Cart.findOne({ userId: session.userId });
+    const { data: cart } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("user_id", session.userId)
+      .maybeSingle();
+
     if (!cart) {
-      return NextResponse.json(
-        { error: "Cart is empty" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Cart is empty" }, { status: 404 });
     }
 
-    const itemIndex = cart.items.findIndex(
-      (item) =>
-        String(item.productId) === String(product._id) &&
-        item.size === sizeStr &&
-        item.color === colorStr
-    );
+    const { data: item } = await supabase
+      .from("cart_items")
+      .select("id")
+      .eq("cart_id", cart.id)
+      .eq("product_id", product.id)
+      .eq("size", sizeStr)
+      .eq("color", colorStr)
+      .maybeSingle();
 
-    if (itemIndex === -1) {
+    if (!item) {
       return NextResponse.json(
         { error: "Item not found in cart" },
         { status: 404 }
       );
     }
 
-    cart.items[itemIndex].quantity = qty;
-    await cart.save();
+    await supabase
+      .from("cart_items")
+      .update({ quantity: qty })
+      .eq("id", item.id);
 
-    return NextResponse.json({ message: "Cart updated", cart });
+    const items = await fetchCartData(supabase, cart.id);
+
+    return NextResponse.json({ message: "Cart updated", cart: { items } });
   } catch (error) {
     console.error("Error in PUT /api/cart:", error);
     return NextResponse.json(
@@ -290,8 +352,6 @@ export async function DELETE(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    await dbConnect();
 
     let body: Record<string, unknown>;
     try {
@@ -315,32 +375,43 @@ export async function DELETE(request: NextRequest) {
     const sizeStr = typeof size === "string" ? size : "";
     const colorStr = typeof color === "string" ? color : "";
 
-    const cart = await Cart.findOne({ userId: session.userId });
+    const supabase = getSupabaseServer();
+
+    const { data: cart } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("user_id", session.userId)
+      .maybeSingle();
+
     if (!cart) {
-      return NextResponse.json(
-        { error: "Cart is empty" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Cart is empty" }, { status: 404 });
     }
 
-    const itemIndex = cart.items.findIndex(
-      (item) =>
-        String(item.productId) === productId.trim() &&
-        item.size === sizeStr &&
-        item.color === colorStr
-    );
+    const { data: item, error } = await supabase
+      .from("cart_items")
+      .select("id")
+      .eq("cart_id", cart.id)
+      .eq("product_id", productId.trim())
+      .eq("size", sizeStr)
+      .eq("color", colorStr)
+      .maybeSingle();
 
-    if (itemIndex === -1) {
+    if (error) {
+      throw error;
+    }
+
+    if (!item) {
       return NextResponse.json(
         { error: "Item not found in cart" },
         { status: 404 }
       );
     }
 
-    cart.items.splice(itemIndex, 1);
-    await cart.save();
+    await supabase.from("cart_items").delete().eq("id", item.id);
 
-    return NextResponse.json({ message: "Item removed from cart", cart });
+    const items = await fetchCartData(supabase, cart.id);
+
+    return NextResponse.json({ message: "Item removed from cart", cart: { items } });
   } catch (error) {
     console.error("Error in DELETE /api/cart:", error);
     return NextResponse.json(

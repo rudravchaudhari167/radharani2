@@ -1,16 +1,24 @@
-/* eslint-disable no-console */
 import dotenv from "dotenv";
 import path from "path";
-import crypto from "crypto";
 import fs from "fs";
-import { createRequire } from "module";
+import { randomUUID } from "crypto";
+import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-const require = createRequire(import.meta.url);
-const { connectToDatabase } = require("../src/lib/db");
-const bcrypt = require("bcryptjs");
-const User = require("../src/models/User").default;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error(
+    "❌ Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local"
+  );
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 const isTTY = Boolean(process.stdin.isTTY);
 let pipedLines: string[] = [];
@@ -44,9 +52,12 @@ function generatePassword(): string {
 }
 
 async function createAdmin() {
-  await connectToDatabase();
-
-  const existingAdmin = await User.findOne({ role: "ADMIN" });
+  const { data: existingAdmin } = await supabase
+    .from("users")
+    .select("id")
+    .eq("role", "ADMIN")
+    .limit(1)
+    .maybeSingle();
   if (existingAdmin) {
     console.error(
       "❌ An admin account already exists. Use this account to manage the store."
@@ -78,19 +89,29 @@ async function createAdmin() {
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const admin = await User.create({
-    name: "Admin",
-    email,
-    phone: "",
-    passwordHash: hashedPassword,
-    role: "ADMIN",
-    isActive: true,
-  });
+  const { data: admin, error } = await supabase
+    .from("users")
+    .insert({
+      id: randomUUID(),
+      name: "Admin",
+      email,
+      phone: "",
+      password_hash: hashedPassword,
+      role: "ADMIN",
+      is_active: true,
+    })
+    .select("id, email, role")
+    .single();
+
+  if (error) {
+    console.error("❌ Failed to create admin:", error.message);
+    process.exit(1);
+  }
 
   console.log("\n✅ Admin account created successfully!");
   console.log(`   Email: ${email}`);
   console.log(`   Role:  ADMIN`);
-  console.log(`   ID:    ${admin._id}`);
+  console.log(`   ID:    ${admin.id}`);
 
   console.log("\nRun the app and log in at /admin/login");
   console.log("\nFor non-interactive setups, set in .env.local:");

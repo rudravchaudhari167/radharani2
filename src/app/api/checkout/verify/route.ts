@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Cart from "@/models/Cart";
-import Address from "@/models/Address";
-import Coupon from "@/models/Coupon";
-import Product from "@/models/Product";
-import Order from "@/models/Order";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { verifyRazorpayPayment, isPaymentSandbox } from "@/lib/razorpay";
 import { getServerSession } from "@/lib/auth";
 
@@ -30,8 +25,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    await dbConnect();
 
     let body: Record<string, unknown>;
     try {
@@ -95,43 +88,69 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cart = await Cart.findOne({ userId: session.userId }).select(
-      "+checkoutPending"
-    );
-    if (!cart || cart.items.length === 0) {
+    const supabase = getSupabaseServer();
+
+    const { data: cart } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("user_id", session.userId)
+      .maybeSingle();
+
+    const { data: cartItems } = cart
+      ? await supabase
+          .from("cart_items")
+          .select("product_id, name, image, size, color, quantity")
+          .eq("cart_id", cart.id)
+      : { data: null };
+
+    if (!cart || !cartItems || cartItems.length === 0) {
       return NextResponse.json(
         { error: "Cart is empty" },
         { status: 400 }
       );
     }
 
-    if (
-      !cart.checkoutPending ||
-      cart.checkoutPending.razorpayOrderId !== razorpayOrderId
-    ) {
+    const { data: pending } = await supabase
+      .from("cart_checkout_pending")
+      .select("*")
+      .eq("cart_id", cart.id)
+      .eq("razorpay_order_id", razorpayOrderId)
+      .maybeSingle();
+
+    if (!pending) {
       return NextResponse.json(
         { error: "No pending checkout found for this order" },
         { status: 400 }
       );
     }
 
-    const pending = cart.checkoutPending;
+    const productIds: string[] = cartItems
+      .map((i) => i.product_id)
+      .filter((id): id is string => Boolean(id));
 
-    const productIds = cart.items.map((item) => String(item.productId));
-    const products = await Product.find({
-      _id: { $in: productIds },
-      isActive: true,
-    }).lean();
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, name, price, images, stock, is_active")
+      .eq("is_active", true)
+      .in("id", productIds.length ? productIds : [""]);
 
     const productMap = new Map(
-      products.map((p) => [String(p._id), p])
+      (products || []).map((p) => [p.id, p])
     );
 
     let subtotal = 0;
-    const orderItems = [];
+    const orderItems: Array<{
+      productId: string;
+      name: string;
+      price: number;
+      image: string;
+      size: string;
+      color: string;
+      quantity: number;
+    }> = [];
 
-    for (const item of cart.items) {
-      const product = productMap.get(String(item.productId));
+    for (const item of cartItems) {
+      const product = productMap.get(item.product_id || "");
 
       if (!product) {
         return NextResponse.json(
@@ -149,27 +168,29 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      subtotal += product.price * item.quantity;
+      subtotal += Number(product.price) * item.quantity;
 
       orderItems.push({
-        productId: String(product._id),
+        productId: product.id,
         name: product.name,
-        price: product.price,
-        image: product.images[0] || "",
+        price: Number(product.price),
+        image: product.images?.[0] || "",
         size: item.size,
         color: item.color,
         quantity: item.quantity,
       });
     }
 
-    if (subtotal !== pending.subtotal) {
+    subtotal = Math.round(subtotal);
+
+    if (subtotal !== Number(pending.subtotal)) {
       return NextResponse.json(
         { error: "Cart contents have changed. Please re-checkout." },
         { status: 400 }
       );
     }
 
-    const method: "STANDARD" | "EXPRESS" = pending.shippingMethod;
+    const method: "STANDARD" | "EXPRESS" = pending.shipping_method;
     const shipping =
       method === "EXPRESS"
         ? SHIPPING_EXPRESS
@@ -177,13 +198,13 @@ export async function POST(request: NextRequest) {
           ? 0
           : SHIPPING_STANDARD;
 
-    const discount = pending.discount;
-    const appliedCouponCode = pending.couponCode || "";
+    const discount = Number(pending.discount) || 0;
+    const appliedCouponCode = pending.coupon_code || "";
 
-    const total = Math.max(0, subtotal - discount + shipping);
+    const total = Math.max(0, Math.round(subtotal - discount + shipping));
     const totalPaise = Math.round(total * 100);
 
-    if (totalPaise !== Math.round(pending.total * 100)) {
+    if (totalPaise !== Math.round(Number(pending.total) * 100)) {
       return NextResponse.json(
         { error: "Order total mismatch. Please re-checkout." },
         { status: 400 }
@@ -191,15 +212,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (appliedCouponCode) {
-      const coupon = await Coupon.findOne({
-        code: appliedCouponCode.toUpperCase(),
-      });
+      const { data: couponRow } = await supabase
+        .from("coupons")
+        .select("code, active, expiry_date, minimum_order, usage_limit, used_count")
+        .eq("code", appliedCouponCode.toUpperCase())
+        .maybeSingle();
       if (
-        !coupon ||
-        !coupon.active ||
-        new Date(coupon.expiryDate) < new Date() ||
-        subtotal < coupon.minimumOrder ||
-        (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit)
+        !couponRow ||
+        !couponRow.active ||
+        new Date(couponRow.expiry_date) < new Date() ||
+        subtotal < Number(couponRow.minimum_order) ||
+        (Number(couponRow.usage_limit) > 0 &&
+          Number(couponRow.used_count) >= Number(couponRow.usage_limit))
       ) {
         return NextResponse.json(
           { error: "Coupon is no longer valid" },
@@ -208,10 +232,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const storedAddress = await Address.findOne({
-      _id: pending.addressId,
-      userId: session.userId,
-    }).lean();
+    const { data: storedAddress } = await supabase
+      .from("addresses")
+      .select("full_name, phone, email, address_line1, address_line2, city, state, pincode, landmark")
+      .eq("id", pending.address_id)
+      .eq("user_id", session.userId)
+      .maybeSingle();
 
     if (!storedAddress) {
       return NextResponse.json(
@@ -221,11 +247,11 @@ export async function POST(request: NextRequest) {
     }
 
     const deliveryAddress = {
-      fullName: storedAddress.fullName,
+      fullName: storedAddress.full_name,
       phone: storedAddress.phone,
       email: storedAddress.email,
-      addressLine1: storedAddress.addressLine1,
-      addressLine2: storedAddress.addressLine2 || "",
+      addressLine1: storedAddress.address_line1,
+      addressLine2: storedAddress.address_line2 || "",
       city: storedAddress.city,
       state: storedAddress.state,
       pincode: storedAddress.pincode,
@@ -238,54 +264,77 @@ export async function POST(request: NextRequest) {
 
     const orderId = generateOrderId();
 
-    const order = await Order.create({
-      orderId,
-      userId: session.userId,
-      items: orderItems,
-      subtotal,
-      discount,
-      couponCode: appliedCouponCode,
-      shipping,
-      total,
-      paymentStatus: "PAID",
-      paymentId: razorpayPaymentId,
-      orderStatus: "PAYMENT_CONFIRMED",
-      address: deliveryAddress,
-      shippingMethod: method,
-      estimatedDelivery,
-    });
+    const { data: orderRow, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        order_id: orderId,
+        user_id: session.userId,
+        subtotal: Math.round(subtotal),
+        discount: Math.round(discount),
+        coupon_code: appliedCouponCode,
+        shipping,
+        total: Math.round(total),
+        payment_status: "PAID",
+        payment_id: razorpayPaymentId,
+        order_status: "PAYMENT_CONFIRMED",
+        address: deliveryAddress,
+        shipping_method: method,
+        estimated_delivery: estimatedDelivery.toISOString(),
+      })
+      .select("id, order_id, subtotal, discount, coupon_code, shipping, total, payment_status, payment_id, order_status, address, shipping_method, estimated_delivery, created_at, updated_at")
+      .single();
 
-    for (const item of orderItems) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -item.quantity },
-      });
+    if (orderError || !orderRow) {
+      throw orderError || new Error("Could not create order");
     }
 
-    await Cart.findOneAndDelete({ userId: session.userId });
+    await supabase
+      .from("order_items")
+      .insert(
+        orderItems.map((item) => ({
+          order_id: orderRow.id,
+          product_id: item.productId,
+          name: item.name,
+          price: item.price,
+          image: item.image,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+        }))
+      );
+
+    for (const item of orderItems) {
+      await supabase.rpc(
+        "decrement_stock",
+        { target_product_id: item.productId, by_qty: item.quantity }
+      );
+    }
+
+    await supabase.from("carts").delete().eq("id", cart.id);
 
     if (appliedCouponCode) {
-      await Coupon.findOneAndUpdate(
-        { code: appliedCouponCode },
-        { $inc: { usedCount: 1 } }
+      await supabase.rpc(
+        "increment_coupon_used",
+        { coupon_code: appliedCouponCode }
       );
     }
 
     return NextResponse.json({
       message: "Payment verified and order placed successfully",
       order: {
-        orderId: order.orderId,
-        items: order.items,
-        subtotal: order.subtotal,
-        discount: order.discount,
-        couponCode: order.couponCode,
-        shipping: order.shipping,
-        total: order.total,
-        paymentStatus: order.paymentStatus,
-        orderStatus: order.orderStatus,
-        address: order.address,
-        shippingMethod: order.shippingMethod,
-        estimatedDelivery: order.estimatedDelivery,
-        createdAt: order.createdAt,
+        orderId: orderRow.order_id,
+        items: orderItems,
+        subtotal: Number(orderRow.subtotal),
+        discount: Number(orderRow.discount),
+        couponCode: orderRow.coupon_code || "",
+        shipping: Number(orderRow.shipping),
+        total: Number(orderRow.total),
+        paymentStatus: orderRow.payment_status,
+        orderStatus: orderRow.order_status,
+        address: orderRow.address,
+        shippingMethod: orderRow.shipping_method,
+        estimatedDelivery: orderRow.estimated_delivery,
+        createdAt: orderRow.created_at,
       },
     });
   } catch (error) {

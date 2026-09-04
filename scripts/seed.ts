@@ -1,14 +1,21 @@
-/* eslint-disable no-console */
 import dotenv from "dotenv";
 import path from "path";
-import { createRequire } from "module";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-const require = createRequire(import.meta.url);
-const { connectToDatabase } = require("../src/lib/db");
-const Product = require("../src/models/Product").default;
-const Coupon = require("../src/models/Coupon").default;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error(
+    "❌ Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local"
+  );
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 const img = (id: string) =>
   `https://images.unsplash.com/${id}?q=80&w=700&auto=format&fit=crop`;
@@ -730,18 +737,30 @@ function slugify(text: string): string {
 }
 
 async function seed() {
-  await connectToDatabase();
-
   const skuDerived = new Set<string>();
   const slugSet = new Set<string>();
 
   // Clear existing seed sources
-  await Product.deleteMany({});
-  await Coupon.deleteMany({});
+  const { error: clearProductError } = await supabase
+    .from("products")
+    .delete()
+    .gte("id", "00000000-0000-0000-0000-000000000000");
+  if (clearProductError) {
+    console.error("❌ Failed to clear products:", clearProductError.message);
+    process.exit(1);
+  }
+  const { error: clearCouponError } = await supabase
+    .from("coupons")
+    .delete()
+    .gte("id", "00000000-0000-0000-0000-000000000000");
+  if (clearCouponError) {
+    console.error("❌ Failed to clear coupons:", clearCouponError.message);
+    process.exit(1);
+  }
 
   let count = 0;
   for (const p of products) {
-    let slug = slugify(p.name);
+    const slug = slugify(p.name);
     let uniq = slug;
     let i = 2;
     while (slugSet.has(uniq)) {
@@ -749,7 +768,7 @@ async function seed() {
     }
     slugSet.add(uniq);
 
-    let sku = `VK-${p.category.slice(0, 3)}-${String(count + 1).padStart(3, "0")}`;
+    const sku = `VK-${p.category.slice(0, 3)}-${String(count + 1).padStart(3, "0")}`;
     let skuUniq = sku;
     let j = 2;
     while (skuDerived.has(skuUniq)) {
@@ -757,44 +776,67 @@ async function seed() {
     }
     skuDerived.add(skuUniq);
 
-    await Product.create({
+    const { error } = await supabase.from("products").insert({
       name: p.name,
       slug: uniq,
       description: p.description,
-      price: p.price,
-      oldPrice: p.oldPrice,
+      price: Math.round(p.price),
+      old_price: typeof p.oldPrice === "number" ? Math.round(p.oldPrice) : null,
       category: p.category,
       subcategory: p.subcategory,
       images: p.images,
-      model3D: "",
+      model_3d: "",
       sizes: p.sizes,
       colors: p.colors,
       stock: p.stock,
       sku: skuUniq,
       rating: Math.round((4 + Math.random() * 0.9) * 10) / 10,
-      reviewCount: Math.floor(Math.random() * 120) + 4,
+      review_count: Math.floor(Math.random() * 120) + 4,
       tags: p.tags,
       featured: p.featured ?? false,
-      isNewArrival: p.isNewArrival ?? false,
-      isActive: true,
+      is_new_arrival: p.isNewArrival ?? false,
+      is_active: true,
     });
+    if (error) {
+      console.error(`❌ Failed to insert product "${p.name}":`, error.message);
+      process.exit(1);
+    }
     count += 1;
   }
 
   for (const c of coupons) {
-    await Coupon.create(c);
+    const { error } = await supabase.from("coupons").insert({
+      code: c.code,
+      description: c.description,
+      discount_type: c.discountType,
+      discount_value: c.discountValue,
+      minimum_order: c.minimumOrder,
+      maximum_discount: c.maximumDiscount,
+      expiry_date: c.expiryDate.toISOString(),
+      usage_limit: c.usageLimit,
+      used_count: 0,
+      active: c.active,
+    });
+    if (error) {
+      console.error(`❌ Failed to insert coupon "${c.code}":`, error.message);
+      process.exit(1);
+    }
   }
 
   console.log(
     `✅ Seeded ${count} products and ${coupons.length} coupons successfully.`
   );
   console.log("Products by category:");
-  const byCat = await Product.aggregate([
-    { $group: { _id: "$category", n: { $sum: 1 } } },
-    { $sort: { _id: 1 } },
-  ]);
-  for (const row of byCat) {
-    console.log(`   ${row._id}: ${row.n}`);
+
+  const { data: byCat } = await supabase.from("products").select("category");
+  const grouped = new Map<string, number>();
+  for (const row of byCat || []) {
+    grouped.set(row.category, (grouped.get(row.category) || 0) + 1);
+  }
+  for (const category of ["MEN", "WOMEN", "UNISEX", "KIDS", "ACCESSORIES"]) {
+    if (grouped.has(category)) {
+      console.log(`   ${category}: ${grouped.get(category)}`);
+    }
   }
 
   process.exit(0);

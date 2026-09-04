@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { getServerSession } from "@/lib/auth";
-import User from "@/models/User";
-import Order from "@/models/Order";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
     const { searchParams } = request.nextUrl;
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -22,57 +20,48 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const role = searchParams.get("role");
 
-    const filter: Record<string, unknown> = {};
+    let query = supabase
+      .from("users")
+      .select("id, name, email, phone, role, is_active, created_at, updated_at", { count: "exact" });
     if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
-      ];
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
     }
     if (role && ["USER", "ADMIN"].includes(role)) {
-      filter.role = role;
+      query = query.eq("role", role);
     }
 
-    const skip = (page - 1) * limit;
+    const { data: usersRaw, count } = await query
+      .order("created_at", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
 
-    const [usersRaw, total] = await Promise.all([
-      User.find(filter)
-        .select("-passwordHash")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      User.countDocuments(filter),
-    ]);
+    const userIds = (usersRaw || []).map((u) => u.id);
+    const total = count ?? 0;
 
-    const userIds = usersRaw.map((u) => u._id);
-    const orderStats = await Order.aggregate([
-      { $match: { userId: { $in: userIds } } },
-      {
-        $group: {
-          _id: "$userId",
-          orderCount: { $sum: 1 },
-          totalSpending: { $sum: "$total" },
-        },
-      },
-    ]);
+    const statsMap = new Map<string, { orderCount: number; totalSpending: number }>();
+    if (userIds.length > 0) {
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("user_id, total")
+        .in("user_id", userIds);
+      for (const order of orders || []) {
+        const current = statsMap.get(order.user_id) || { orderCount: 0, totalSpending: 0 };
+        current.orderCount += 1;
+        current.totalSpending += Number(order.total) || 0;
+        statsMap.set(order.user_id, current);
+      }
+    }
 
-    const statsMap = new Map(
-      orderStats.map((s) => [String(s._id), { orderCount: s.orderCount, totalSpending: s.totalSpending }])
-    );
-
-    const users = usersRaw.map((u) => {
-      const stats = statsMap.get(String(u._id)) || { orderCount: 0, totalSpending: 0 };
+    const users = (usersRaw || []).map((u) => {
+      const stats = statsMap.get(u.id) || { orderCount: 0, totalSpending: 0 };
       return {
-        _id: u._id,
+        _id: u.id,
         name: u.name,
         email: u.email,
         phone: u.phone,
         role: u.role,
-        isActive: u.isActive,
-        createdAt: u.createdAt,
-        updatedAt: u.updatedAt,
+        isActive: u.is_active,
+        createdAt: u.created_at,
+        updatedAt: u.updated_at,
         orderCount: stats.orderCount,
         totalSpending: stats.totalSpending,
       };

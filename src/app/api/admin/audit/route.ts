@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { getServerSession } from "@/lib/auth";
-import AuditLog from "@/models/AuditLog";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
     const { searchParams } = request.nextUrl;
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -21,23 +20,41 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get("action");
     const adminEmail = searchParams.get("adminEmail");
 
-    const filter: Record<string, unknown> = {};
+    let query = supabase
+      .from("audit_logs")
+      .select("id, admin_id, admin_email, action, target, details, ip_address, created_at", { count: "exact" });
     if (action) {
-      filter.action = { $regex: action, $options: "i" };
+      query = query.ilike("action", `%${action}%`);
     }
     if (adminEmail) {
-      filter.adminEmail = { $regex: adminEmail, $options: "i" };
+      query = query.ilike("admin_email", `%${adminEmail}%`);
     }
 
-    const skip = (page - 1) * limit;
-    const [logs, total] = await Promise.all([
-      AuditLog.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      AuditLog.countDocuments(filter),
-    ]);
+    const { data: rows, count } = await query
+      .order("created_at", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    const total = count ?? 0;
+
+    const logs = ((rows || []) as Array<{
+      id: string;
+      admin_id: string | null;
+      admin_email: string | null;
+      action: string;
+      target: string;
+      details: unknown;
+      ip_address: string | null;
+      created_at: string;
+    }>).map((r) => ({
+      _id: r.id,
+      adminId: r.admin_id,
+      adminEmail: r.admin_email,
+      action: r.action,
+      target: r.target,
+      details: r.details,
+      ipAddress: r.ip_address,
+      createdAt: r.created_at,
+    }));
 
     return NextResponse.json({
       logs,

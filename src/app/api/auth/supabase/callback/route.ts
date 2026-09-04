@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import User from "@/models/User";
-import { generateToken, setAuthCookie, hashPassword } from "@/lib/auth";
+import { randomUUID } from "crypto";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { type UserRow } from "@/lib/supabase-shapes";
+import { generateToken, hashPassword } from "@/lib/auth";
 import { getSupabaseAdmin, isSupabaseEnabled } from "@/lib/supabase";
 
 /**
  * GET /api/auth/supabase/callback?code=...&next=/...
  *
  * Supabase redirects here after an OAuth provider (e.g. Google) succeeds.
- * We exchange the auth code for a session, then upsert the user into MongoDB
- * (always the USER role) and set the httpOnly JWT cookie before redirecting
- * back to the app.
+ * We exchange the auth code for a session, then upsert the user into the
+ * Supabase Postgres `users` table (always the USER role) and set the httpOnly
+ * JWT cookie before redirecting back to the app.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -30,12 +31,12 @@ export async function GET(request: NextRequest) {
       return redirectWith(request, "/login", "Authentication failed");
     }
 
-    const supabase = getSupabaseAdmin();
-    if (!supabase) {
+    const supabaseAuth = getSupabaseAdmin();
+    if (!supabaseAuth) {
       return redirectWith(request, "/login", "Authentication failed");
     }
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabaseAuth.auth.exchangeCodeForSession(code);
     if (error || !data.user) {
       return redirectWith(
         request,
@@ -49,40 +50,60 @@ export async function GET(request: NextRequest) {
       return redirectWith(request, "/login", "No email associated with account");
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
-    const existing = await User.findOne({ email });
-    let user;
-    if (existing) {
-      if (!existing.name && data.user.user_metadata?.name) {
-        existing.name = String(data.user.user_metadata.name);
-        await existing.save();
+    const { data: existing } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+    let userRow = existing as UserRow | null;
+
+    if (userRow) {
+      if (!userRow.name && data.user.user_metadata?.name) {
+        await supabase
+          .from("users")
+          .update({ name: String(data.user.user_metadata.name) })
+          .eq("id", userRow.id);
+        userRow = { ...userRow, name: String(data.user.user_metadata.name) };
       }
-      user = existing;
     } else {
       const metaName = String(
         data.user.user_metadata?.name || data.user.user_metadata?.full_name || ""
       );
-      user = await User.create({
+      const insertUser = {
+        id: randomUUID(),
         name: metaName || email.split("@")[0] || "User",
         email,
         phone: "",
-        passwordHash: await hashPassword(
+        password_hash: await hashPassword(
           Math.random().toString(36).slice(2) + Date.now().toString(36)
         ),
         role: "USER", // never ADMIN
-        isActive: true,
-      });
+        is_active: true,
+      };
+      const { data: created, error: insertError } = await supabase
+        .from("users")
+        .insert(insertUser)
+        .select("*")
+        .single();
+      if (insertError && insertError.code !== "23505") {
+        throw insertError;
+      }
+      userRow = (created as UserRow | null) ?? userRow;
+      if (!userRow) {
+        throw new Error("User could not be provisioned");
+      }
     }
 
-    if (!user.isActive) {
+    if (!userRow.is_active) {
       return redirectWith(request, "/login", "Account has been disabled");
     }
 
     const token = generateToken({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
+      _id: userRow.id,
+      email: userRow.email,
+      role: userRow.role,
     });
 
     const response = NextResponse.redirect(

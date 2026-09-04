@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Address from "@/models/Address";
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { getServerSession } from "@/lib/auth";
 
 export async function DELETE(
@@ -16,8 +15,6 @@ export async function DELETE(
       );
     }
 
-    await dbConnect();
-
     const { id } = await params;
 
     if (!id) {
@@ -27,17 +24,23 @@ export async function DELETE(
       );
     }
 
-    const address = await Address.findOneAndDelete({
-      _id: id,
-      userId: session.userId,
-    });
+    const supabase = getSupabaseServer();
 
-    if (!address) {
+    const { data: existing } = await supabase
+      .from("addresses")
+      .select("id")
+      .eq("id", id)
+      .eq("user_id", session.userId)
+      .maybeSingle();
+
+    if (!existing) {
       return NextResponse.json(
         { error: "Address not found" },
         { status: 404 }
       );
     }
+
+    await supabase.from("addresses").delete().eq("id", existing.id);
 
     return NextResponse.json({ message: "Address deleted successfully" });
   } catch (error) {

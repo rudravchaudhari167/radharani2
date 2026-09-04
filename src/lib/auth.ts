@@ -2,8 +2,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { redirect } from "next/navigation";
-import connectToDatabase from "@/lib/db";
-import User from "@/models/User";
+import { getSupabaseServer } from "@/lib/supabase-server";
 
 export const TOKEN_COOKIE = "auth_token";
 
@@ -21,13 +20,16 @@ export interface SessionUser {
   role: "USER" | "ADMIN";
 }
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "";
 const TOKEN_EXPIRY = "7d";
 
-if (!JWT_SECRET) {
-  throw new Error(
-    "Please define the NEXTAUTH_SECRET environment variable inside .env.local"
-  );
+function getJwtSecret(): string {
+  const secret = process.env.NEXTAUTH_SECRET || "";
+  if (!secret) {
+    throw new Error(
+      "Please define the NEXTAUTH_SECRET environment variable inside .env.local"
+    );
+  }
+  return secret;
 }
 
 /**
@@ -59,7 +61,7 @@ export function generateToken(
     email: user.email,
     role: user.role,
   };
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: TOKEN_EXPIRY });
 }
 
 /**
@@ -67,7 +69,7 @@ export function generateToken(
  */
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
     return decoded;
   } catch {
     return null;
@@ -92,18 +94,23 @@ export async function getServerSession(): Promise<SessionUser | null> {
       return null;
     }
 
-    await connectToDatabase();
-    const user = await User.findById(payload.userId).lean();
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, name, email, phone, role, is_active")
+      .eq("id", payload.userId)
+      .maybeSingle();
+    const user = error ? null : data;
 
-    if (!user || !user.isActive) {
+    if (!user || !user.is_active) {
       return null;
     }
 
     return {
-      userId: String(user._id),
+      userId: user.id,
       email: user.email,
       name: user.name,
-      phone: user.phone,
+      phone: user.phone ?? "",
       role: user.role,
     };
   } catch {

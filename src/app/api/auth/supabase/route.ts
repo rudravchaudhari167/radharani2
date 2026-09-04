@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import User from "@/models/User";
+import { randomUUID } from "crypto";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { type UserRow } from "@/lib/supabase-shapes";
 import {
   generateToken,
   setAuthCookie,
@@ -16,12 +17,13 @@ import {
  * POST /api/auth/supabase
  * Body: { action: "signup" | "signin", email, password, name? }
  *
- * Signs up / signs in with Supabase, then upserts the user into MongoDB
- * (always the USER role) and sets the existing httpOnly JWT cookie so the
- * rest of the app (cart, orders, admin checks) works as before.
+ * Signs up / signs in with Supabase, then upserts the user into the Supabase
+ * Postgres `users` table (always the USER role) and sets the existing httpOnly
+ * JWT cookie so the rest of the app (cart, orders, admin checks) works as
+ * before.
  *
  * Admin users are never created through this endpoint — admins are provisioned
- * only via `npm run create-admin` or the admin login flow.
+ * via the admin login flow against the `users` table.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -67,8 +69,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseAdmin();
-    if (!supabase) {
+    const supabaseAuth = getSupabaseAdmin();
+    if (!supabaseAuth) {
       return NextResponse.json(
         { error: "Supabase auth is not configured" },
         { status: 400 }
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     let result: SupabaseAuthResult;
     if (action === "signup") {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabaseAuth.auth.signUp({
         email: normalizedEmail,
         password: pwd,
         options: {
@@ -100,7 +102,7 @@ export async function POST(request: NextRequest) {
           : null,
       };
     } else {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseAuth.auth.signInWithPassword({
         email: normalizedEmail,
         password: pwd,
       });
@@ -128,35 +130,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await dbConnect();
+    const supabase = getSupabaseServer();
 
-    // Upsert the user into MongoDB, always with the USER role.
-    const existing = await User.findOne({ email: result.email });
-    let user;
-    if (existing) {
+    const { data: existing } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", (result.email || "").toLowerCase())
+      .maybeSingle();
+    let userRow = existing as UserRow | null;
+
+    if (userRow) {
       // A user signed in through Supabase — if they were created via the
       // normal register flow they already have a password hash. Only update
       // name if it's missing.
-      if (!existing.name && typeof name === "string" && name) {
-        existing.name = name.trim();
-        await existing.save();
+      if (!userRow.name && typeof name === "string" && name) {
+        await supabase
+          .from("users")
+          .update({ name: name.trim() })
+          .eq("id", userRow.id);
+        userRow = { ...userRow, name: name.trim() };
       }
-      user = existing;
     } else {
       const firstName = typeof name === "string" ? name.trim() : "";
-      const fallbackName = normalizedEmail.split("@")[0] || "User";
-      const randomPhone = "";
-      user = await User.create({
+      const fallbackName = ((result.email || "") as string).split("@")[0] || "User";
+      const insertUser = {
+        id: randomUUID(),
         name: firstName || fallbackName,
-        email: normalizedEmail,
-        phone: randomPhone,
-        passwordHash: await hashPassword(pwd),
+        email: (result.email || "").toLowerCase(),
+        phone: "",
+        password_hash: await hashPassword(pwd),
         role: "USER", // never ADMIN
-        isActive: true,
-      });
+        is_active: true,
+      };
+      const { data: created, error: insertError } = await supabase
+        .from("users")
+        .insert(insertUser)
+        .select("*")
+        .single();
+      if (insertError) {
+        const duplicateEmail = insertError.code === "23505";
+        if (!duplicateEmail) {
+          throw insertError;
+        }
+        const { data: again } = await supabase
+          .from("users")
+          .select("*")
+          .eq("email", (result.email || "").toLowerCase())
+          .maybeSingle();
+        userRow = (again as UserRow | null) ?? null;
+        if (!userRow) {
+          throw insertError;
+        }
+      } else {
+        userRow = created as UserRow;
+      }
     }
 
-    if (!user.isActive) {
+    if (!userRow) {
+      throw new Error("User could not be provisioned");
+    }
+
+    if (!userRow.is_active) {
       return NextResponse.json(
         { error: "Account has been disabled" },
         { status: 403 }
@@ -164,9 +198,9 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
+      _id: userRow.id,
+      email: userRow.email,
+      role: userRow.role,
     });
     await setAuthCookie(token);
 
@@ -176,12 +210,12 @@ export async function POST(request: NextRequest) {
           ? "Account created successfully"
           : "Login successful",
       user: {
-        _id: String(user._id),
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        isActive: user.isActive,
+        _id: String(userRow.id),
+        name: userRow.name,
+        email: userRow.email,
+        phone: userRow.phone ?? "",
+        role: userRow.role,
+        isActive: userRow.is_active,
       },
       supabaseSession: result.session,
     });

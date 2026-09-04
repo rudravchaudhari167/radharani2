@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Product from "@/models/Product";
+import { getSupabaseServer } from "@/lib/supabase-server";
+import { productFromRow } from "@/lib/supabase-shapes";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect();
-
     const { id } = await params;
 
     if (!id) {
@@ -18,20 +16,32 @@ export async function GET(
       );
     }
 
-    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+    const supabase = getSupabaseServer();
 
-    const product = isObjectId
-      ? await Product.findOne({ _id: id, isActive: true }).lean()
-      : await Product.findOne({ slug: id.toLowerCase(), isActive: true }).lean();
+    let { data: product, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .eq("is_active", true)
+      .maybeSingle();
 
-    if (!product) {
+    if (!product && !error) {
+      ({ data: product, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("slug", id.toLowerCase())
+        .eq("is_active", true)
+        .maybeSingle());
+    }
+
+    if (error || !product) {
       return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ product });
+    return NextResponse.json({ product: productFromRow(product) });
   } catch (error) {
     console.error("Error in GET /api/products/[id]:", error);
     return NextResponse.json(
