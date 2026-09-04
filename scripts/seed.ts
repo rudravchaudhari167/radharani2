@@ -1,21 +1,27 @@
 import dotenv from "dotenv";
 import path from "path";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import pg from "pg";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-if (!supabaseUrl || !serviceRoleKey) {
+const databaseUrl = process.env.DATABASE_URL || "";
+
+if (!databaseUrl && (!supabaseUrl || !serviceRoleKey)) {
   console.error(
-    "❌ Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local"
+    "❌ Database is not configured. Provide DATABASE_URL or NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local"
   );
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase: SupabaseClient | null =
+  supabaseUrl && serviceRoleKey
+    ? createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      })
+    : null;
 
 const img = (id: string) =>
   `https://images.unsplash.com/${id}?q=80&w=700&auto=format&fit=crop`;
@@ -739,6 +745,112 @@ function slugify(text: string): string {
 async function seed() {
   const skuDerived = new Set<string>();
   const slugSet = new Set<string>();
+
+  if (databaseUrl) {
+    console.log("Connecting directly via PostgreSQL (DATABASE_URL)...");
+    const pgClient = new pg.Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false },
+    });
+    await pgClient.connect();
+
+    try {
+      await pgClient.query("DELETE FROM public.products;");
+      await pgClient.query("DELETE FROM public.coupons;");
+
+      let count = 0;
+      for (const p of products) {
+        const slug = slugify(p.name);
+        let uniq = slug;
+        let i = 2;
+        while (slugSet.has(uniq)) {
+          uniq = `${slug}-${i++}`;
+        }
+        slugSet.add(uniq);
+
+        const sku = `VK-${p.category.slice(0, 3)}-${String(count + 1).padStart(3, "0")}`;
+        let skuUniq = sku;
+        let j = 2;
+        while (skuDerived.has(skuUniq)) {
+          skuUniq = `${sku}-${j++}`;
+        }
+        skuDerived.add(skuUniq);
+
+        await pgClient.query(
+          `INSERT INTO public.products (
+            name, slug, description, price, old_price, category, subcategory,
+            images, model_3d, sizes, colors, stock, sku, rating, review_count,
+            tags, featured, is_new_arrival, is_active
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
+          [
+            p.name,
+            uniq,
+            p.description,
+            Math.round(p.price),
+            typeof p.oldPrice === "number" ? Math.round(p.oldPrice) : null,
+            p.category,
+            p.subcategory,
+            JSON.stringify(p.images),
+            "",
+            JSON.stringify(p.sizes),
+            JSON.stringify(p.colors),
+            p.stock,
+            skuUniq,
+            Math.round((4 + Math.random() * 0.9) * 10) / 10,
+            Math.floor(Math.random() * 120) + 4,
+            JSON.stringify(p.tags),
+            p.featured ?? false,
+            p.isNewArrival ?? false,
+            true,
+          ]
+        );
+        count += 1;
+      }
+
+      for (const c of coupons) {
+        await pgClient.query(
+          `INSERT INTO public.coupons (
+            code, description, discount_type, discount_value, minimum_order,
+            maximum_discount, expiry_date, usage_limit, used_count, active
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [
+            c.code,
+            c.description,
+            c.discountType,
+            c.discountValue,
+            c.minimumOrder,
+            c.maximumDiscount,
+            c.expiryDate.toISOString(),
+            c.usageLimit,
+            0,
+            c.active,
+          ]
+        );
+      }
+
+      console.log(
+        `✅ Seeded ${count} products and ${coupons.length} coupons successfully via PostgreSQL.`
+      );
+      console.log("Products by category:");
+
+      const res = await pgClient.query(
+        "SELECT category, count(*)::int AS count FROM public.products GROUP BY category;"
+      );
+      for (const row of res.rows) {
+        console.log(`   ${row.category}: ${row.count}`);
+      }
+
+      await pgClient.end();
+      process.exit(0);
+    } catch (err) {
+      await pgClient.end();
+      throw err;
+    }
+  }
+
+  if (!supabase) {
+    throw new Error("Neither DATABASE_URL nor Supabase client is available.");
+  }
 
   // Clear existing seed sources
   const { error: clearProductError } = await supabase

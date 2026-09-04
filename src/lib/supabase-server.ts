@@ -17,12 +17,13 @@ export function isSupabaseDatabaseEnabled(): boolean {
  * admin CRUD). Never import from client components — it can leak keys.
  */
 export function getSupabaseServer(): SupabaseClient {
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  const key = SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+  if (!SUPABASE_URL || !key) {
     throw new Error(
       "Please define NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables"
     );
   }
-  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+  return createClient(SUPABASE_URL, key);
 }
 
 /**

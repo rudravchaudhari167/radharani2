@@ -2,23 +2,29 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { randomUUID } from "crypto";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import pg from "pg";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-if (!supabaseUrl || !serviceRoleKey) {
+const databaseUrl = process.env.DATABASE_URL || "";
+
+if (!databaseUrl && (!supabaseUrl || !serviceRoleKey)) {
   console.error(
-    "❌ Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local"
+    "❌ Database is not configured. Set DATABASE_URL or NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local"
   );
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase: SupabaseClient | null =
+  supabaseUrl && serviceRoleKey
+    ? createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      })
+    : null;
 
 const isTTY = Boolean(process.stdin.isTTY);
 let pipedLines: string[] = [];
@@ -52,17 +58,36 @@ function generatePassword(): string {
 }
 
 async function createAdmin() {
-  const { data: existingAdmin } = await supabase
-    .from("users")
-    .select("id")
-    .eq("role", "ADMIN")
-    .limit(1)
-    .maybeSingle();
-  if (existingAdmin) {
-    console.error(
-      "❌ An admin account already exists. Use this account to manage the store."
-    );
-    process.exit(1);
+  let pgClient: pg.Client | null = null;
+  if (databaseUrl) {
+    pgClient = new pg.Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false },
+    });
+    await pgClient.connect();
+    const res = await pgClient.query("SELECT id FROM public.users WHERE role = 'ADMIN' LIMIT 1;");
+    if (res.rows.length > 0) {
+      console.error(
+        "❌ An admin account already exists. Use this account to manage the store."
+      );
+      await pgClient.end();
+      process.exit(1);
+    }
+  } else if (supabase) {
+    const { data: existingAdmin } = await supabase
+      .from("users")
+      .select("id")
+      .eq("role", "ADMIN")
+      .limit(1)
+      .maybeSingle();
+    if (existingAdmin) {
+      console.error(
+        "❌ An admin account already exists. Use this account to manage the store."
+      );
+      process.exit(1);
+    }
+  } else {
+    throw new Error("Neither DATABASE_URL nor Supabase client is available.");
   }
 
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -72,6 +97,7 @@ async function createAdmin() {
   const email = ask("Admin email: ").toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     console.error("❌ Invalid email address.");
+    if (pgClient) await pgClient.end();
     process.exit(1);
   }
 
@@ -84,34 +110,52 @@ async function createAdmin() {
 
   if (password.length < 8) {
     console.error("❌ Password must be at least 8 characters.");
+    if (pgClient) await pgClient.end();
     process.exit(1);
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
+  const newId = randomUUID();
 
-  const { data: admin, error } = await supabase
-    .from("users")
-    .insert({
-      id: randomUUID(),
-      name: "Admin",
-      email,
-      phone: "",
-      password_hash: hashedPassword,
-      role: "ADMIN",
-      is_active: true,
-    })
-    .select("id, email, role")
-    .single();
+  if (pgClient) {
+    try {
+      await pgClient.query(
+        `INSERT INTO public.users (
+          id, name, email, phone, password_hash, role, is_active
+        ) VALUES ($1, $2, $3, $4, $5, 'ADMIN', true)`,
+        [newId, "Admin", email, "", hashedPassword]
+      );
+      await pgClient.end();
+    } catch (err: unknown) {
+      console.error("❌ Failed to create admin:", (err as Error).message);
+      await pgClient.end();
+      process.exit(1);
+    }
+  } else if (supabase) {
+    const { error } = await supabase
+      .from("users")
+      .insert({
+        id: newId,
+        name: "Admin",
+        email,
+        phone: "",
+        password_hash: hashedPassword,
+        role: "ADMIN",
+        is_active: true,
+      })
+      .select("id, email, role")
+      .single();
 
-  if (error) {
-    console.error("❌ Failed to create admin:", error.message);
-    process.exit(1);
+    if (error) {
+      console.error("❌ Failed to create admin:", error.message);
+      process.exit(1);
+    }
   }
 
   console.log("\n✅ Admin account created successfully!");
   console.log(`   Email: ${email}`);
   console.log(`   Role:  ADMIN`);
-  console.log(`   ID:    ${admin.id}`);
+  console.log(`   ID:    ${newId}`);
 
   console.log("\nRun the app and log in at /admin/login");
   console.log("\nFor non-interactive setups, set in .env.local:");
