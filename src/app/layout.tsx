@@ -23,11 +23,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "VRINDAV | Divine Style. Eternal Bond.",
+  title: "Radha Rani | Divine Style. Eternal Bond.",
   description:
-    "Contemporary fashion inspired by timeless Indian heritage. Explore premium clothing and accessories at VRINDAV.",
+    "Contemporary fashion inspired by timeless Indian heritage. Explore premium clothing and accessories at Radha Rani.",
   openGraph: {
-    title: "VRINDAV | Divine Style. Eternal Bond.",
+    title: "Radha Rani | Divine Style. Eternal Bond.",
     description: "Contemporary fashion inspired by timeless Indian heritage.",
     type: "website",
   },

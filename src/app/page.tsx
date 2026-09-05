@@ -48,7 +48,7 @@ function Hero() {
       <div className="absolute inset-0 z-0">
         <Image
           src="/hero-bg.png"
-          alt="VRINDAV — Divine Style. Eternal Bond."
+          alt="Radha Rani — Divine Style. Eternal Bond."
           fill
           priority
           sizes="100vw"
@@ -76,7 +76,7 @@ function Hero() {
           transition={{ duration: 0.9, delay: 0.15 }}
           className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-normal leading-[1.05] tracking-tight text-[var(--color-text)]"
         >
-          <span className="block tracking-[0.08em]">VRINDAV</span>
+          <span className="block tracking-[0.08em]">RADHA RANI</span>
           <span className="block font-serif italic font-normal text-2xl sm:text-4xl md:text-5xl mt-2 text-[var(--color-accent)]">
             Divine Style. Eternal Bond.
           </span>
@@ -101,14 +101,14 @@ function Hero() {
             href="/shop"
             className="flex items-center justify-center gap-2 rounded-full bg-[var(--color-accent)] px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-white shadow-sm transition-transform hover:scale-[1.02] hover:bg-[var(--color-accent-light)] active:scale-100"
           >
-            <span>SHOP COLLECTION</span>
+            <span>SHOP CATALOG</span>
             <ArrowRight size={14} />
           </Link>
           <Link
-            href="/shop"
+            href="/collections"
             className="flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg)]/80 px-8 py-3.5 text-xs font-medium uppercase tracking-[0.16em] text-[var(--color-text)] backdrop-blur-xs transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
           >
-            EXPLORE
+            EXPLORE COLLECTIONS
           </Link>
         </motion.div>
       </div>
@@ -131,7 +131,7 @@ function FeaturedCollections() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="py-20 sm:py-28 bg-[var(--color-bg)]">
+    <section id="collections" className="py-20 sm:py-28 bg-[var(--color-bg)] scroll-mt-24">
       <div className="mx-auto max-w-[80rem] px-4 sm:px-6 lg:px-8">
         <div className="mx-auto mb-14 max-w-2xl text-center">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.3em] text-[var(--color-accent)]">
@@ -275,7 +275,7 @@ function BrandStoryTeaser() {
           <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-[var(--color-border)]/60 bg-[var(--color-bg-muted)]">
             <Image
               src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=1000&auto=format&fit=crop"
-              alt="The Craft of VRINDAV"
+              alt="The Craft of Radha Rani"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover object-center"
@@ -291,7 +291,7 @@ function BrandStoryTeaser() {
               Devotion woven into modern silhouettes.
             </h2>
             <p className="text-sm sm:text-base font-light leading-relaxed text-[var(--color-text-muted)]">
-              VRINDAV is born from the desire to bridge timeless Indian iconography—the rhythm of Krishna&apos;s flute, the fluid grace of Radha, the iridescent shimmer of peacock plumage—with minimalist contemporary tailoring.
+              Radha Rani is born from the desire to bridge timeless Indian iconography—the rhythm of Krishna&apos;s flute, the fluid grace of Radha, the iridescent shimmer of peacock plumage—with minimalist contemporary tailoring.
             </p>
             <p className="text-sm sm:text-base font-light leading-relaxed text-[var(--color-text-muted)]">
               Rather than loud prints, we communicate heritage through architectural cuts, subtle placket embroidery, natural linen textures, and refined jewel tones. Clothing meant to feel quiet, noble, and deeply personal.
@@ -301,7 +301,7 @@ function BrandStoryTeaser() {
                 href="/about"
                 className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-accent)]"
               >
-                <span>Read The VRINDAV Story</span>
+                <span>Read The Radha Rani Story</span>
                 <ArrowRight size={14} />
               </Link>
             </div>

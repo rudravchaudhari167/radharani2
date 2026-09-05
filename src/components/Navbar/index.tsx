@@ -19,8 +19,9 @@ import { useWishlistStore } from "@/lib/wishlist-store";
 import SearchOverlay from "@/components/SearchOverlay";
 
 const NAV_LINKS = [
+  { href: "/", label: "Home" },
   { href: "/shop", label: "Shop" },
-  { href: "/shop", label: "Collections" },
+  { href: "/collections", label: "Collections" },
   { href: "/shop/men", label: "Men" },
   { href: "/shop/women", label: "Women" },
   { href: "/shop/accessories", label: "Accessories" },
@@ -48,8 +49,9 @@ export default function Navbar() {
   const wishlistCount = useWishlistStore((s) => s.totalItems);
 
   const isActive = (href: string) => {
-    if (href === "/shop" && pathname === "/shop") return true;
-    if (href !== "/shop" && pathname.startsWith(href)) return true;
+    if (href === "/") return pathname === "/";
+    if (href === "/shop") return pathname === "/shop";
+    if (href !== "/" && href !== "/shop" && pathname.startsWith(href)) return true;
     return false;
   };
 
@@ -125,16 +127,19 @@ export default function Navbar() {
           </div>
 
           {/* ======================================================== */}
-          {/* CENTER: VRINDAV Logo                                     */}
+          {/* CENTER: RADHA RANI Logo                                  */}
           {/* ======================================================== */}
           <div className="flex shrink-0 items-center justify-center">
             <Link
               href="/"
               className="group flex flex-col items-center justify-center text-center"
-              aria-label="VRINDAV home"
+              aria-label="Radha Rani home"
             >
-              <span className="font-serif text-xl sm:text-2xl font-normal tracking-[0.28em] text-[var(--color-text)] transition-opacity group-hover:opacity-90">
-                VRINDAV
+              <span className="font-serif text-xl sm:text-2xl font-normal tracking-[0.22em] text-[var(--color-text)] transition-opacity group-hover:opacity-90">
+                RADHA RANI
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.32em] text-[var(--color-accent)] font-medium -mt-0.5">
+                Atelier de Dévotion
               </span>
             </Link>
           </div>
@@ -234,9 +239,18 @@ export default function Navbar() {
               className="relative z-10 flex h-full w-4/5 max-w-sm flex-col bg-[var(--color-bg)] border-r border-[var(--color-border)] shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-5">
-                <span className="font-serif text-lg tracking-[0.2em] font-normal text-[var(--color-text)]">
-                  VRINDAV
-                </span>
+                <Link
+                  href="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex flex-col"
+                >
+                  <span className="font-serif text-lg tracking-[0.2em] font-normal text-[var(--color-text)]">
+                    RADHA RANI
+                  </span>
+                  <span className="text-[8px] uppercase tracking-[0.3em] text-[var(--color-accent)] font-medium">
+                    Atelier de Dévotion
+                  </span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}

@@ -62,7 +62,7 @@ const SHOP_LINKS = [
   { href: "/shop/men", label: "Men" },
   { href: "/shop/women", label: "Women" },
   { href: "/shop/accessories", label: "Accessories" },
-  { href: "/shop", label: "Collections" },
+  { href: "/collections", label: "Collections" },
 ];
 
 const HELP_LINKS = [
@@ -92,9 +92,12 @@ export default function Footer() {
       <div className="mx-auto w-full max-w-[80rem] px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
           <div className="space-y-4 lg:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2" aria-label="VRINDAV home">
+            <Link href="/" className="inline-flex flex-col items-start" aria-label="Radha Rani home">
               <span className="text-2xl font-serif tracking-[0.2em] font-normal text-[var(--color-text)]">
-                VRINDAV
+                RADHA RANI
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.32em] text-[var(--color-accent)] font-medium">
+                Atelier de Dévotion
               </span>
             </Link>
             <p className="text-sm font-medium tracking-wide text-[var(--color-accent)]">
@@ -222,7 +225,7 @@ export default function Footer() {
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-[var(--color-border)] pt-6 sm:flex-row">
           <p className="text-xs text-[var(--color-text-muted)]">
-            &copy; {new Date().getFullYear()} VRINDAV. All rights reserved.
+            &copy; {new Date().getFullYear()} Radha Rani. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-[var(--color-text-muted)]">
             <Link href="/privacy" className="hover:text-[var(--color-accent)]">

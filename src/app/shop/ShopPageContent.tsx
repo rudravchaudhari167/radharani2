@@ -924,7 +924,7 @@ export default function ShopPageContent({
           {/* Page header */}
           <div className="mb-10">
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.28em] text-[var(--color-accent)]">
-              {showHero ? `${hero?.name} Collection` : "VRINDAV COLLECTION"}
+              {showHero ? `${hero?.name} Collection` : "RADHA RANI COLLECTION"}
             </p>
             <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[var(--color-text)]">
               {showHero && hero ? `${hero.name}` : "SHOP"}
@@ -932,7 +932,7 @@ export default function ShopPageContent({
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               {showHero && hero
                 ? hero.description
-                : "Explore the VRINDAV collection."}
+                : "Explore the Radha Rani catalog."}
             </p>
           </div>
 
