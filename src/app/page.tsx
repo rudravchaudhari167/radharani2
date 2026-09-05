@@ -105,10 +105,10 @@ function Hero() {
             <ArrowRight size={14} />
           </Link>
           <Link
-            href="/collections"
+            href="/shop"
             className="flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg)]/80 px-8 py-3.5 text-xs font-medium uppercase tracking-[0.16em] text-[var(--color-text)] backdrop-blur-xs transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
           >
-            EXPLORE COLLECTIONS
+            EXPLORE STORE
           </Link>
         </motion.div>
       </div>
