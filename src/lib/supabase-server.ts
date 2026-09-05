@@ -1,4 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -37,4 +39,42 @@ export function getSupabaseAnon(): SupabaseClient {
     );
   }
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+export type PendingCookie = {
+  name: string;
+  value: string;
+  options: CookieOptions;
+};
+
+/**
+ * Server-side Supabase client for authentication flows (OAuth, PKCE, exchangeCodeForSession).
+ * Correctly reads and writes auth cookies (such as code verifiers) via Next.js `cookies()`.
+ */
+export async function createSupabaseAuthServerClient(pendingCookies?: PendingCookie[]) {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+              if (pendingCookies) {
+                pendingCookies.push({ name, value, options });
+              }
+            });
+          } catch {
+            // Ignored if called in contexts where setting cookies is restricted
+          }
+        },
+      },
+    }
+  );
 }

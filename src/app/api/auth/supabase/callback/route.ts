@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { getSupabaseServer } from "@/lib/supabase-server";
+import {
+  getSupabaseServer,
+  createSupabaseAuthServerClient,
+  type PendingCookie,
+} from "@/lib/supabase-server";
 import { type UserRow } from "@/lib/supabase-shapes";
 import { generateToken, hashPassword } from "@/lib/auth";
-import { getSupabaseAdmin, isSupabaseEnabled } from "@/lib/supabase";
+import { isSupabaseEnabled } from "@/lib/supabase";
 
 /**
  * GET /api/auth/supabase/callback?code=...&next=/...
@@ -31,10 +35,8 @@ export async function GET(request: NextRequest) {
       return redirectWith(request, "/login", "Authentication failed");
     }
 
-    const supabaseAuth = getSupabaseAdmin();
-    if (!supabaseAuth) {
-      return redirectWith(request, "/login", "Authentication failed");
-    }
+    const pendingCookies: PendingCookie[] = [];
+    const supabaseAuth = await createSupabaseAuthServerClient(pendingCookies);
 
     const { data, error } = await supabaseAuth.auth.exchangeCodeForSession(code);
     if (error || !data.user) {
@@ -60,12 +62,16 @@ export async function GET(request: NextRequest) {
     let userRow = existing as UserRow | null;
 
     if (userRow) {
+      const updates: Record<string, unknown> = {};
       if (!userRow.name && data.user.user_metadata?.name) {
-        await supabase
-          .from("users")
-          .update({ name: String(data.user.user_metadata.name) })
-          .eq("id", userRow.id);
-        userRow = { ...userRow, name: String(data.user.user_metadata.name) };
+        updates.name = String(data.user.user_metadata.name);
+      }
+      if (!("auth_user_id" in userRow) || !(userRow as unknown as { auth_user_id?: string }).auth_user_id) {
+        updates.auth_user_id = data.user.id;
+      }
+      if (Object.keys(updates).length > 0) {
+        await supabase.from("users").update(updates).eq("id", userRow.id);
+        userRow = { ...userRow, ...updates };
       }
     } else {
       const metaName = String(
@@ -73,6 +79,7 @@ export async function GET(request: NextRequest) {
       );
       const insertUser = {
         id: randomUUID(),
+        auth_user_id: data.user.id,
         name: metaName || email.split("@")[0] || "User",
         email,
         phone: "",
@@ -109,7 +116,11 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.redirect(
       new URL(next, request.url).toString()
     );
-    // Manually set the cookie on the redirect response.
+    // Attach any auth cookies set by Supabase
+    pendingCookies.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options);
+    });
+    // Manually set the auth_token cookie on the redirect response.
     response.cookies.set("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
