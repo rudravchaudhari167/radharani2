@@ -166,10 +166,18 @@ export default function Navbar() {
 
             <Link
               href="/wishlist"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
+              className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
+                wishlistCount > 0
+                  ? "text-red-500 hover:text-red-600"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              }`}
               aria-label={`Wishlist (${wishlistCount})`}
             >
-              <Heart size={18} strokeWidth={1.75} />
+              <Heart
+                size={18}
+                strokeWidth={1.75}
+                className={wishlistCount > 0 ? "fill-red-500 text-red-500" : ""}
+              />
               <Badge count={wishlistCount} />
             </Link>
 

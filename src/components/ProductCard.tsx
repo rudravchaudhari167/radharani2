@@ -170,12 +170,18 @@ export default function ProductCard({
         <button
           type="button"
           onClick={handleWishlistToggle}
-          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-bg)]/80 backdrop-blur-xs border border-[var(--color-border)]/60 text-[var(--color-text)] transition-transform hover:scale-110 active:scale-95"
+          className={`absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-xs border transition-all hover:scale-110 active:scale-95 ${
+            inWishlist
+              ? "bg-red-50 border-red-200 text-red-500 shadow-xs"
+              : "bg-[var(--color-bg)]/85 border-[var(--color-border)]/60 text-[var(--color-text)] hover:text-red-500"
+          }`}
           aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart
             size={15}
-            className={inWishlist ? "fill-[var(--color-accent)] text-[var(--color-accent)]" : "text-[var(--color-text)]"}
+            className={`transition-colors duration-200 ${
+              inWishlist ? "fill-red-500 text-red-500" : "text-[var(--color-text)]"
+            }`}
           />
         </button>
 

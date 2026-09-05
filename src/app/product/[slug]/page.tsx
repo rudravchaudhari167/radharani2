@@ -530,12 +530,18 @@ function ProductPageContent({ params }: { params: ProductParams }) {
                     });
                     addToast(inWishlist ? "Removed from wishlist" : "Added to wishlist", "info");
                   }}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)]"
+                  className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${
+                    inWishlist
+                      ? "border-red-200 bg-red-50 text-red-600 shadow-xs"
+                      : "border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text)] hover:border-red-300 hover:text-red-500"
+                  }`}
                   aria-label="Toggle wishlist"
                 >
                   <Heart
                     size={18}
-                    className={inWishlist ? "fill-[var(--color-accent)] text-[var(--color-accent)]" : "text-[var(--color-text)]"}
+                    className={`transition-colors duration-200 ${
+                      inWishlist ? "fill-red-500 text-red-500" : "text-[var(--color-text)]"
+                    }`}
                   />
                 </button>
               </div>
