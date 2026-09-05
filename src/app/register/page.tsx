@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -58,19 +58,29 @@ function normalizeUser(raw: unknown): User | null {
   };
 }
 
-function BrandPanel({ title, subtitle }: { title: string; subtitle: string }) {
+function BrandPanel({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
   return (
-    <div className="relative hidden flex-col justify-between overflow-hidden bg-[#1A2530] p-12 lg:flex lg:w-[44%] text-white">
+    <div className="relative hidden w-[44%] overflow-hidden bg-[#1D3048] p-12 lg:flex lg:flex-col lg:justify-between">
+      {/* Subtle grid pattern */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
-          backgroundSize: "28px 28px",
+            "linear-gradient(#FAF9F6 1px, transparent 1px), linear-gradient(90deg, #FAF9F6 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
         }}
       />
+
+      {/* Glow orb */}
       <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#2D4A6B]/30 blur-3xl" />
 
+      {/* Top Brand */}
       <div className="relative z-10">
         <Link href="/" className="inline-block">
           <span className="font-serif text-2xl font-normal tracking-[0.3em] text-white">
@@ -82,10 +92,11 @@ function BrandPanel({ title, subtitle }: { title: string; subtitle: string }) {
         </Link>
       </div>
 
+      {/* Middle Copy */}
       <div className="relative z-10 max-w-sm">
         <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#FAF9F6]">
           <Sparkles size={12} className="text-[#B8965A]" />
-          Privileged Membership
+          New Client
         </span>
         <h1 className="font-serif text-3xl font-light leading-snug tracking-tight text-white sm:text-4xl">
           {title}
@@ -95,6 +106,7 @@ function BrandPanel({ title, subtitle }: { title: string; subtitle: string }) {
         </p>
       </div>
 
+      {/* Bottom Quote */}
       <div className="relative z-10 border-t border-white/10 pt-6">
         <p className="font-serif italic text-xs text-white/70">
           &ldquo;Divine Style. Eternal Bond.&rdquo;
@@ -111,8 +123,9 @@ function BrandPanel({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const addToast = useToastStore((s) => s.addToast);
 
   const setUser = useAuthStore((s) => s.setUser);
@@ -129,6 +142,29 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+
+  useEffect(() => {
+    const rawError = searchParams.get("error_description") || searchParams.get("error");
+    let msg = rawError ? decodeURIComponent(rawError) : "";
+
+    if (!msg && typeof window !== "undefined" && window.location.hash) {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const hErr = hash.get("error_description") || hash.get("error");
+      if (hErr) {
+        msg = decodeURIComponent(hErr);
+      }
+    }
+
+    if (msg) {
+      if (msg.includes("Unable to exchange external code")) {
+        setFormError(
+          "Google sign-up could not be completed (OAuth exchange failed). Please register with your email & password or verify the Google credentials in Supabase."
+        );
+      } else {
+        setFormError(msg);
+      }
+    }
+  }, [searchParams]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -472,5 +508,19 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen w-full items-center justify-center">
+          <LoaderCircle size={32} className="animate-spin text-[#2D4A6B]" />
+        </div>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }

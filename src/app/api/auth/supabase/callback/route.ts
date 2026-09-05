@@ -23,6 +23,17 @@ export async function GET(request: NextRequest) {
     const code = url.searchParams.get("code");
     const next = url.searchParams.get("next") || "/account";
 
+    // Handle any OAuth provider errors directly
+    const errorParam = url.searchParams.get("error");
+    const errorDesc = url.searchParams.get("error_description");
+    if (errorParam || errorDesc) {
+      return redirectWith(
+        request,
+        "/login",
+        errorDesc || errorParam || "Authentication failed"
+      );
+    }
+
     if (!isSupabaseEnabled()) {
       return redirectWith(
         request,
@@ -138,6 +149,6 @@ export async function GET(request: NextRequest) {
 
 function redirectWith(request: NextRequest, path: string, message: string) {
   const url = new URL(path, request.url);
-  url.searchParams.set("error", encodeURIComponent(message));
+  url.searchParams.set("error", message);
   return NextResponse.redirect(url.toString());
 }

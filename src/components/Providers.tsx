@@ -22,6 +22,43 @@ export function Providers({ children }: { children: ReactNode }) {
   }, [fetchUser]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      const hash = window.location.hash;
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+      const rawError =
+        url.searchParams.get("error_description") ||
+        url.searchParams.get("error") ||
+        hashParams.get("error_description") ||
+        hashParams.get("error");
+
+      if (rawError) {
+        const decoded = decodeURIComponent(rawError);
+        // Clean URL parameters
+        url.searchParams.delete("error");
+        url.searchParams.delete("error_code");
+        url.searchParams.delete("error_description");
+        url.searchParams.delete("sb");
+        window.history.replaceState(
+          {},
+          "",
+          url.pathname + (url.search ? url.search : "")
+        );
+
+        if (
+          window.location.pathname !== "/login" &&
+          window.location.pathname !== "/register"
+        ) {
+          window.location.href = `/login?error=${encodeURIComponent(decoded)}`;
+        }
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }, []);
+
+  useEffect(() => {
     if (user) {
       fetchCart();
       fetchWishlist();

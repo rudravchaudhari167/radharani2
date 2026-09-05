@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -143,6 +143,29 @@ function LoginPageContent() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const rawError = searchParams.get("error_description") || searchParams.get("error");
+    let msg = rawError ? decodeURIComponent(rawError) : "";
+
+    if (!msg && typeof window !== "undefined" && window.location.hash) {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const hErr = hash.get("error_description") || hash.get("error");
+      if (hErr) {
+        msg = decodeURIComponent(hErr);
+      }
+    }
+
+    if (msg) {
+      if (msg.includes("Unable to exchange external code")) {
+        setFormError(
+          "Google sign-in could not be completed (OAuth exchange failed). Please log in with your email & password or verify the Google credentials in Supabase."
+        );
+      } else {
+        setFormError(msg);
+      }
+    }
+  }, [searchParams]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {

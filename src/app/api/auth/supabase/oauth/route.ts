@@ -5,6 +5,33 @@ import {
 } from "@/lib/supabase-server";
 import { isSupabaseEnabled } from "@/lib/supabase";
 
+function getBaseUrl(request: NextRequest): string {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+  const host = request.headers.get("host");
+  if (host && !host.includes("localhost")) {
+    const proto = request.headers.get("x-forwarded-proto") || "https";
+    return `${proto}://${host}`;
+  }
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  if (
+    process.env.NEXTAUTH_URL &&
+    (!process.env.NEXTAUTH_URL.includes("localhost") ||
+      request.nextUrl.origin.includes("localhost"))
+  ) {
+    return process.env.NEXTAUTH_URL;
+  }
+  return request.nextUrl.origin || "http://localhost:3000";
+}
+
 /**
  * POST /api/auth/supabase/oauth
  * Body: { provider: "google" | "github" | "apple", redirectTo?: string }
@@ -29,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     const provider = String(body.provider || "google");
-    const baseUrl = process.env.NEXTAUTH_URL || request.nextUrl.origin || "http://localhost:3000";
+    const baseUrl = getBaseUrl(request);
     const redirectTo = String(
       body.redirectTo || `${baseUrl}/api/auth/supabase/callback`
     );
@@ -42,10 +69,7 @@ export async function POST(request: NextRequest) {
       options: {
         redirectTo,
         skipBrowserRedirect: false,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
+        scopes: "openid email profile",
       },
     });
 
@@ -86,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     const provider = request.nextUrl.searchParams.get("provider") || "google";
     const next = request.nextUrl.searchParams.get("next") || "/account";
-    const baseUrl = process.env.NEXTAUTH_URL || request.nextUrl.origin || "http://localhost:3000";
+    const baseUrl = getBaseUrl(request);
     const redirectTo = `${baseUrl}/api/auth/supabase/callback?next=${encodeURIComponent(next)}`;
 
     const pendingCookies: PendingCookie[] = [];
@@ -96,16 +120,18 @@ export async function GET(request: NextRequest) {
       provider: provider as "google",
       options: {
         redirectTo,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
+        scopes: "openid email profile",
       },
     });
 
     if (error || !data.url) {
       return NextResponse.redirect(
-        new URL(`/login?error=${encodeURIComponent(error?.message || "Failed to initiate OAuth")}`, request.url)
+        new URL(
+          `/login?error=${encodeURIComponent(
+            error?.message || "Failed to initiate OAuth"
+          )}`,
+          request.url
+        )
       );
     }
 
