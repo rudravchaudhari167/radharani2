@@ -70,6 +70,7 @@ interface WishlistState {
     productId: string,
     productData?: Partial<WishlistItem>
   ) => Promise<boolean>;
+  removeFromWishlist: (productId: string) => Promise<boolean>;
   isInWishlist: (productId: string) => boolean;
 }
 
@@ -139,6 +140,24 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return false;
       }
 
+      const data = (await res.json()) as { wishlist?: unknown };
+      const items = mapWishlistItems(data?.wishlist);
+      set({ items, totalItems: items.length });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  removeFromWishlist: async (productId) => {
+    try {
+      const res = await fetch("/api/wishlist", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ productId }),
+      });
+      if (!res.ok) return false;
       const data = (await res.json()) as { wishlist?: unknown };
       const items = mapWishlistItems(data?.wishlist);
       set({ items, totalItems: items.length });

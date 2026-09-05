@@ -22,13 +22,11 @@ interface Petal {
 }
 
 const PETAL_COLORS = [
-  "rgba(236, 72, 153, ",  // pink
-  "rgba(244, 114, 182, ", // light pink
-  "rgba(219, 39, 119, ",  // deep pink
-  "rgba(168, 85, 247, ",  // purple
-  "rgba(124, 58, 237, ",  // violet
-  "rgba(192, 132, 252, ", // light purple
-  "rgba(212, 165, 116, ", // gold
+  "rgba(215, 168, 172, ", // soft blush rose
+  "rgba(202, 152, 158, ", // muted vintage rose
+  "rgba(214, 188, 150, ", // soft champagne gold
+  "rgba(228, 208, 202, ", // pale petal ivory
+  "rgba(195, 148, 152, ", // delicate rosewood
 ];
 
 const POOL_SIZE = 300;
@@ -72,6 +70,7 @@ export default function RosePetalCursor() {
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    if (prefersReducedMotion) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let width = 0;

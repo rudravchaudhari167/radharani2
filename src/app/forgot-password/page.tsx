@@ -3,122 +3,57 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Mail, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Mail, Sparkles, LoaderCircle } from "lucide-react";
 import { useToastStore } from "@/lib/toast-store";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/* ------------------------------------------------------------------ */
-/* Brand panel                                                         */
-/* ------------------------------------------------------------------ */
-
 function BrandPanel() {
   return (
-    <div className="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex lg:w-[44%]">
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-accent)] to-[var(--color-gold)]" />
+    <div className="relative hidden flex-col justify-between overflow-hidden bg-[#1A2530] p-12 lg:flex lg:w-[44%] text-white">
       <div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-10"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.28) 1px, transparent 0)",
-          backgroundSize: "34px 34px",
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
+          backgroundSize: "28px 28px",
         }}
       />
-      <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-black/25 blur-3xl" />
+      <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#2D4A6B]/30 blur-3xl" />
 
-      <span
-        className="animate-petal-fall pointer-events-none absolute right-10 top-28 h-6 w-6 rounded-full opacity-70"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #f9a8d4, #ec4899 60%, #be185d)",
-          animationDuration: "12s",
-        }}
-      />
-      <span
-        className="animate-petal-fall pointer-events-none absolute left-1/2 top-4 h-4 w-4 rounded-full opacity-60"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #fde68a, #d4a574 60%, #b8865e)",
-          animationDelay: "2.6s",
-          animationDuration: "14s",
-        }}
-      />
+      <div className="relative z-10">
+        <Link href="/" className="inline-block">
+          <span className="font-serif text-2xl font-normal tracking-[0.3em] text-white">
+            VRINDAV
+          </span>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#B8965A]">
+            Atelier de Dévotion
+          </p>
+        </Link>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="relative z-10"
-      >
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/25 bg-white/15 backdrop-blur-sm">
-          <Sparkles size={22} className="text-white" />
+      <div className="relative z-10 max-w-sm">
+        <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#FAF9F6]">
+          <Sparkles size={12} className="text-[#B8965A]" />
+          Account Security
         </span>
-        <h2
-          className="mt-6 bg-clip-text text-2xl font-black tracking-[0.3em] text-transparent"
-          style={{ backgroundImage: "linear-gradient(135deg,#fff,#f5d0fe)" }}
-        >
-          Radha Rani
-        </h2>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.15 }}
-        className="relative z-10 max-w-md"
-      >
-        <h1 className="text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
-          Reset your password
+        <h1 className="font-serif text-3xl font-light leading-snug tracking-tight text-white sm:text-4xl">
+          Recover Your Client Profile
         </h1>
-        <p className="mt-5 text-base font-light leading-relaxed text-white/85">
-          We&apos;ll send you a secure link to set a new password and get back to
-          your divine collection.
+        <p className="mt-4 text-xs font-light leading-relaxed text-white/75">
+          We will transmit private instructions to your registered email to
+          restore access to your saved garments and order history.
         </p>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-        className="relative z-10"
-      >
-        <p className="text-sm font-semibold italic text-white/80">
+      <div className="relative z-10 border-t border-white/10 pt-6">
+        <p className="font-serif italic text-xs text-white/70">
           &ldquo;Divine Style. Eternal Bond.&rdquo;
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }
-
-function LoaderIcon() {
-  return (
-    <svg
-      className="h-4 w-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-      />
-    </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
 
 export default function ForgotPasswordPage() {
   const addToast = useToastStore((s) => s.addToast);
@@ -135,18 +70,16 @@ export default function ForgotPasswordPage() {
 
       const trimmed = email.trim();
       if (!trimmed) {
-        setError("Email is required");
+        setError("Email address is required");
         return;
       }
       if (!EMAIL_REGEX.test(trimmed)) {
-        setError("Please enter a valid email");
+        setError("Please enter a valid email address");
         return;
       }
 
       setLoading(true);
       try {
-        // Intentionally try to POST; if no endpoint exists we still show the
-        // generic message so we never reveal whether an account exists.
         try {
           await fetch("/api/auth/forgot-password", {
             method: "POST",
@@ -154,13 +87,10 @@ export default function ForgotPasswordPage() {
             body: JSON.stringify({ email: trimmed }),
           });
         } catch {
-          // Suppress network errors — generic success either way.
+          // Suppress network errors
         }
         setSubmitted(true);
-        addToast(
-          "If an account exists, recovery instructions have been sent.",
-          "success",
-        );
+        addToast("Instructions sent if account exists", "success");
       } finally {
         setLoading(false);
       }
@@ -169,108 +99,89 @@ export default function ForgotPasswordPage() {
   );
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Brand panel */}
+    <div className="flex min-h-screen w-full bg-[#FAF9F6]">
       <BrandPanel />
 
-      {/* Form panel */}
       <div className="relative flex w-full items-center justify-center px-4 py-16 sm:px-8 lg:w-[56%]">
         <div className="w-full max-w-md">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="glass-card p-8 sm:p-10"
+            transition={{ duration: 0.5 }}
+            className="rounded-sm border border-[#E7E3DC] bg-white p-8 sm:p-10 shadow-sm"
           >
-            <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-[var(--color-primary-light)]">
-              <Mail size={13} />
-              Recovery
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#2D4A6B]">
+              Password Assistance
             </p>
-            <h1 className="text-3xl font-black tracking-tight text-[var(--color-text)]">
-              Forgot password?
+            <h1 className="mt-2 font-serif text-2xl font-light text-[#171717] sm:text-3xl">
+              Forgot Password
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
-              Enter the email you registered with and we&apos;ll send you
-              instructions to reset your password.
+            <p className="mt-1 text-xs text-[#666666]">
+              Enter the email address registered with your account.
             </p>
 
             {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mt-8 space-y-6"
-              >
-                <div className="flex items-start gap-3 rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-4">
-                  <Mail size={18} className="mt-0.5 shrink-0 text-emerald-400" />
-                  <p className="text-sm leading-relaxed text-emerald-200">
-                    If an account exists, recovery instructions have been sent.
-                  </p>
+              <div className="mt-6 space-y-6">
+                <div className="rounded-sm border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800">
+                  If an account exists under this address, reset instructions
+                  have been dispatched.
                 </div>
                 <Link
                   href="/login"
-                  className="btn btn-primary inline-flex w-full items-center justify-center gap-2"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 bg-[#171717] text-xs font-semibold uppercase tracking-[0.18em] text-white hover:bg-[#2D4A6B]"
                 >
-                  <ArrowLeft size={16} />
-                  Back to login
+                  <ArrowLeft size={14} />
+                  Return to Sign In
                 </Link>
-              </motion.div>
+              </div>
             ) : (
-              <form onSubmit={handleSubmit} className="mt-6 space-y-5 noValidate">
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                    Email
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                    Email Address
                   </label>
                   <div className="relative">
-                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
-                      <Mail size={17} />
-                    </span>
+                    <Mail
+                      size={15}
+                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                    />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      placeholder="you@domain.com"
                       autoComplete="email"
-                      aria-invalid={Boolean(error)}
-                      className={`w-full rounded-xl border bg-white/5 py-3 pl-11 pr-4 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 ${
-                        error
-                          ? "border-[var(--color-secondary)]/60 focus:border-[var(--color-secondary)] focus:ring-[var(--color-secondary)]/40"
-                          : "border-[var(--color-border)] focus:border-[var(--color-primary-light)] focus:ring-[var(--color-primary-light)]/40"
-                      }`}
+                      className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
                     />
                   </div>
-                  {error && (
-                    <p className="mt-1.5 text-xs text-[var(--color-secondary)]">
-                      {error}
-                    </p>
-                  )}
+                  {error && <p className="mt-1 text-[11px] text-red-600">{error}</p>}
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn btn-primary h-12 w-full rounded-2xl text-base font-bold disabled:opacity-70"
+                  className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 bg-[#171717] px-6 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#2D4A6B] disabled:opacity-60"
                 >
                   {loading ? (
                     <>
-                      <LoaderIcon />
-                      Sending…
+                      <LoaderCircle size={15} className="animate-spin" />
+                      Sending Link…
                     </>
                   ) : (
                     <>
-                      Send instructions
-                      <ArrowRight size={17} />
+                      Send Reset Link
+                      <ArrowRight size={14} />
                     </>
                   )}
                 </button>
 
-                <p className="text-center text-sm text-[var(--color-text-muted)]">
-                  Remembered your password?{" "}
+                <p className="pt-2 text-center text-xs text-[#666666]">
+                  Remember your credentials?{" "}
                   <Link
                     href="/login"
-                    className="font-semibold text-[var(--color-primary-light)] transition-colors hover:text-[var(--color-secondary)]"
+                    className="font-semibold text-[#171717] underline hover:text-[#2D4A6B]"
                   >
-                    Back to login
+                    Sign In
                   </Link>
                 </p>
               </form>

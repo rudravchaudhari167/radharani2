@@ -14,9 +14,18 @@ import {
   ShoppingBag,
   PackageSearch,
   LoaderCircle,
-  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
+
+interface OrderItem {
+  name: string;
+  price: number;
+  quantity: number;
+  size?: string;
+  color?: string;
+  image?: string;
+}
 
 interface Order {
   orderId: string;
@@ -35,7 +44,7 @@ interface Order {
     state?: string;
     pincode?: string;
   };
-  items?: unknown[];
+  items?: OrderItem[];
 }
 
 function inr(value: number): string {
@@ -53,8 +62,7 @@ function formatDate(value?: string): string {
 
 function formatDeliveryRange(shippingMethod?: "STANDARD" | "EXPRESS"): string {
   const now = new Date();
-  const [min, max] =
-    shippingMethod === "EXPRESS" ? [1, 3] : [3, 7];
+  const [min, max] = shippingMethod === "EXPRESS" ? [1, 3] : [3, 7];
   const a = new Date(now);
   const b = new Date(now);
   a.setDate(a.getDate() + min);
@@ -62,10 +70,6 @@ function formatDeliveryRange(shippingMethod?: "STANDARD" | "EXPRESS"): string {
   const fmt = (d: Date) =>
     d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   return `${fmt(a)} – ${fmt(b)}`;
-}
-
-function paymentMethodLabel(): string {
-  return "UPI / Card / Netbanking";
 }
 
 function OrderSuccessContent() {
@@ -122,11 +126,10 @@ function OrderSuccessContent() {
   if (loading) {
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 pt-28">
-        <LoaderCircle size={40} className="animate-spin text-[var(--color-primary-light)]" />
-        <div className="mt-4 space-y-3">
-          <div className="skeleton h-6 w-56" />
-          <div className="skeleton h-4 w-72" />
-        </div>
+        <LoaderCircle size={32} className="animate-spin text-[#2D4A6B]" />
+        <p className="mt-4 text-xs uppercase tracking-[0.25em] text-[#666666]">
+          Loading Order Confirmation…
+        </p>
       </div>
     );
   }
@@ -134,29 +137,27 @@ function OrderSuccessContent() {
   if (error || !order) {
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center px-4 pt-28 text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 18 }}
-          className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[var(--color-secondary)]/15"
-        >
-          <PackageSearch size={36} className="text-[var(--color-secondary)]" />
-        </motion.div>
-        <h1 className="text-2xl font-black tracking-tight">Order not found</h1>
-        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-          {error || "We couldn't find your order. Please check the order ID."}
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#F4F1EA] text-[#666666]">
+          <PackageSearch size={32} strokeWidth={1.5} />
+        </div>
+        <h1 className="font-serif text-2xl font-light text-[#171717]">
+          Order Not Found
+        </h1>
+        <p className="mt-2 text-sm text-[#666666]">
+          {error || "We could not find your order details. Please verify the link."}
         </p>
-        {!user && (
-          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-            You may need to be logged in to view this order.
-          </p>
-        )}
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/shop" className="btn btn-primary">
-            Continue Shopping
+          <Link
+            href="/shop"
+            className="bg-[#171717] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-[#2D4A6B]"
+          >
+            Return to Shop
           </Link>
-          <Link href="/login?redirect=/order-success" className="btn btn-ghost">
-            Log in to view
+          <Link
+            href="/track-order"
+            className="border border-[#E7E3DC] px-6 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-[#666666] hover:text-[#171717]"
+          >
+            Track Order
           </Link>
         </div>
       </div>
@@ -176,253 +177,151 @@ function OrderSuccessContent() {
     : "";
 
   return (
-    <div className="relative mx-auto w-full max-w-3xl overflow-hidden px-4 pb-24 pt-16 sm:px-6 lg:px-8">
-      {/* Decorative falling petals background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <span
-          className="animate-petal-fall absolute left-[10%] top-0 h-6 w-6 rounded-full opacity-60"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, #f9a8d4, #ec4899 60%, #be185d)",
-            animationDuration: "11s",
-          }}
-        />
-        <span
-          className="animate-petal-fall absolute left-[35%] top-0 h-4 w-4 rounded-full opacity-50"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, #c4b5fd, #8b5cf6 60%, #6d28d9)",
-            animationDelay: "2.2s",
-            animationDuration: "13s",
-          }}
-        />
-        <span
-          className="animate-petal-fall absolute left-[62%] top-0 h-7 w-7 rounded-full opacity-50"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, #fecdd3, #f472b6 60%, #db2777)",
-            animationDelay: "4.5s",
-            animationDuration: "15s",
-          }}
-        />
-        <span
-          className="animate-petal-fall absolute left-[85%] top-0 h-5 w-5 rounded-full opacity-60"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, #fef3c7, #fbbf24 60%, #d97706)",
-            animationDelay: "1s",
-            animationDuration: "14s",
-          }}
-        />
-      </div>
-
-      <div className="relative">
+    <div className="min-h-screen bg-[#FAF9F6] pb-28 pt-24 text-[#171717]">
+      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8">
         {/* Animated checkmark */}
         <div className="flex justify-center">
           <motion.div
-            initial={{ scale: 0, rotate: -40, opacity: 0 }}
-            animate={{ scale: 1, rotate: 0, opacity: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 220,
-              damping: 14,
-              delay: 0.1,
-            }}
-            className="relative"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 240, damping: 18 }}
+            className="flex h-20 w-20 items-center justify-center rounded-full bg-[#171717] text-white shadow-sm"
           >
-            <span className="animate-pulse-glow absolute inset-0 rounded-full bg-emerald-500/30 blur-2xl" />
-            <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 shadow-[0_0_60px_rgba(16,185,129,0.5)]">
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 12, delay: 0.35 }}
-              >
-                <Check size={52} strokeWidth={3} className="text-white" />
-              </motion.span>
-            </div>
-            <span className="animate-ping absolute inset-0 rounded-full bg-emerald-400/30" />
+            <Check size={36} strokeWidth={2.5} />
           </motion.div>
         </div>
 
         {/* Headings */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-8 text-center"
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mt-6 text-center"
         >
-          <p className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-emerald-400">
-            <Check size={13} />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#2D4A6B]">
             Payment Successful
           </p>
-          <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-            ORDER PLACED{" "}
-            <span className="bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-secondary)] bg-clip-text text-transparent">
-              SUCCESSFULLY!
-            </span>
+          <h1 className="mt-2 font-serif text-3xl font-light tracking-tight sm:text-4xl">
+            Thank you for your order
           </h1>
-          <p className="mt-3 text-sm text-[var(--color-text-muted)]">
-            Thank you{user?.name ? `, ${user.name.split(" ")[0]}` : ""}! Your divine
-            order is on its way. A confirmation has been sent to your email.
+          <p className="mt-2 text-sm text-[#666666]">
+            {user?.name ? `${user.name.split(" ")[0]}, your` : "Your"} piece from
+            VRINDAV has been confirmed. A receipt has been dispatched to your
+            registered email.
           </p>
         </motion.div>
 
-        {/* Order ID */}
+        {/* Order ID Bar */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.45 }}
-          className="mx-auto mt-8 flex max-w-md items-center justify-between gap-4 rounded-2xl border border-[var(--color-border)] bg-white/[0.03] px-5 py-4"
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8 flex items-center justify-between rounded-sm border border-[#E7E3DC] bg-white px-5 py-4"
         >
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-              Order ID
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#666666]">
+              Order Number
             </p>
-            <p className="mt-1 font-mono text-lg font-bold tracking-wide">
+            <p className="font-mono text-sm font-semibold tracking-wide text-[#171717]">
               {order.orderId}
             </p>
           </div>
           <button
             type="button"
             onClick={copyOrderId}
-            className="btn btn-ghost gap-1.5 text-sm"
+            className="inline-flex items-center gap-1.5 border border-[#E7E3DC] px-3 py-1.5 text-xs text-[#666666] transition-colors hover:text-[#171717]"
           >
             {copied ? (
               <>
-                <Check size={15} className="text-emerald-400" />
+                <Check size={13} className="text-emerald-600" />
                 Copied
               </>
             ) : (
               <>
-                <Copy size={15} />
+                <Copy size={13} />
                 Copy
               </>
             )}
           </button>
         </motion.div>
 
-        {/* Details grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3"
-        >
-          <DetailCard
-            icon={<CalendarDays size={18} />}
-            label="Order Date"
-            value={formatDate(order.createdAt)}
-          />
-          <DetailCard
-            icon={<CreditCard size={18} />}
-            label="Total Paid"
-            value={inr(order.total || 0)}
-          />
-          <DetailCard
-            icon={<Truck size={18} />}
-            label="Payment Method"
-            value={paymentMethodLabel()}
-          />
-        </motion.div>
-
-        {/* Delivery address */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.75 }}
-          className="glass-card mt-6 p-6 sm:p-8"
-        >
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                <MapPin size={15} />
-                Delivery Address
-              </h3>
-              <p className="mt-3 font-semibold">
-                {order.address?.fullName || "—"}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-muted)]">
-                {fullAddress}
-              </p>
-              {order.address?.phone && (
-                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                  {order.address.phone}
-                </p>
-              )}
+        {/* Details Grid */}
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="rounded-sm border border-[#E7E3DC] bg-white p-4">
+            <div className="flex items-center gap-2 text-xs text-[#666666]">
+              <CalendarDays size={15} />
+              <span className="uppercase tracking-wider">Date</span>
             </div>
-            <div>
-              <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                <Truck size={15} />
-                Estimated Delivery
-              </h3>
-              <p className="mt-3 text-2xl font-black text-[var(--color-primary-light)]">
-                {formatDeliveryRange(order.shippingMethod)}
-              </p>
-              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                {order.shippingMethod === "EXPRESS"
-                  ? "Express shipping (1-3 business days)"
-                  : "Standard shipping (3-7 business days)"}
-              </p>
-            </div>
+            <p className="mt-2 text-sm font-semibold text-[#171717]">
+              {formatDate(order.createdAt)}
+            </p>
           </div>
-        </motion.div>
+          <div className="rounded-sm border border-[#E7E3DC] bg-white p-4">
+            <div className="flex items-center gap-2 text-xs text-[#666666]">
+              <CreditCard size={15} />
+              <span className="uppercase tracking-wider">Total Amount</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-[#171717]">
+              {inr(order.total || 0)}
+            </p>
+          </div>
+          <div className="rounded-sm border border-[#E7E3DC] bg-white p-4">
+            <div className="flex items-center gap-2 text-xs text-[#666666]">
+              <Truck size={15} />
+              <span className="uppercase tracking-wider">Estimated Delivery</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-[#171717]">
+              {formatDeliveryRange(order.shippingMethod)}
+            </p>
+          </div>
+        </div>
 
-        {/* Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.9 }}
-          className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"
-        >
-          <Link href="/shop" className="btn btn-primary px-7 py-3">
-            <ShoppingBag size={16} />
-            Continue Shopping
-          </Link>
+        {/* Delivery Address */}
+        <div className="mt-6 rounded-sm border border-[#E7E3DC] bg-white p-6">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#666666]">
+            <MapPin size={14} />
+            Delivery Destination
+          </div>
+          <p className="mt-3 text-sm font-semibold text-[#171717]">
+            {order.address?.fullName || "—"}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-[#666666]">
+            {fullAddress}
+          </p>
+          {order.address?.phone && (
+            <p className="mt-2 text-xs text-[#666666]">
+              Phone: {order.address.phone}
+            </p>
+          )}
+        </div>
+
+        {/* Action CTAs */}
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link
             href={`/track-order?orderId=${encodeURIComponent(order.orderId)}`}
-            className="btn btn-outline px-7 py-3"
+            className="inline-flex items-center gap-2 bg-[#171717] px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-[#2D4A6B]"
           >
-            <Truck size={16} />
-            Track Order
+            Track Shipment
+            <ArrowRight size={14} />
           </Link>
-          <Link href="/orders" className="btn btn-ghost px-7 py-3">
-            <PackageSearch size={16} />
-            View My Orders
+          <Link
+            href="/shop"
+            className="border border-[#E7E3DC] bg-white px-8 py-3.5 text-xs font-medium uppercase tracking-[0.18em] text-[#171717] hover:border-[#171717]"
+          >
+            Continue Browsing
           </Link>
-        </motion.div>
+        </div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.1 }}
-          className="mt-10 flex items-center justify-center gap-1.5 text-center text-xs text-[var(--color-text-muted)]"
-        >
-          <Sparkles size={12} className="text-[var(--color-gold)]" />
-          May your style be as divine as your bond. Thank you for choosing Radha Rani.
-        </motion.p>
+        {/* Brand Note */}
+        <div className="mt-14 border-t border-[#E7E3DC] pt-8 text-center">
+          <p className="font-serif italic text-sm text-[#666666]">
+            &ldquo;Divine Style. Eternal Bond.&rdquo;
+          </p>
+          <p className="mt-1 text-[11px] uppercase tracking-[0.25em] text-[#999999]">
+            VRINDAV Atelier
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function DetailCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-white/[0.03] p-5">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary-light)]">
-        {icon}
-      </span>
-      <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-bold text-[var(--color-text)]">{value}</p>
     </div>
   );
 }
@@ -431,8 +330,8 @@ export default function OrderSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[70vh] items-center justify-center">
-          <div className="skeleton h-24 w-24 rounded-2xl" />
+        <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl items-center justify-center px-4 pt-28">
+          <LoaderCircle size={32} className="animate-spin text-[#2D4A6B]" />
         </div>
       }
     >

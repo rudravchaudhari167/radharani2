@@ -12,6 +12,7 @@ import {
   CalendarDays,
   LoaderCircle,
   ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import OrderTimeline, { type OrderStatusType } from "@/components/OrderTimeline";
 
@@ -85,17 +86,6 @@ function formatDeliveryRange(shippingMethod?: "STANDARD" | "EXPRESS"): string {
   return `${fmt(a)} – ${fmt(b)}`;
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  ORDER_PLACED: "bg-[var(--color-primary)]/15 text-[var(--color-primary-light)]",
-  PAYMENT_CONFIRMED: "bg-[var(--color-primary)]/15 text-[var(--color-primary-light)]",
-  PROCESSING: "bg-amber-500/15 text-amber-400",
-  PACKED: "bg-amber-500/15 text-amber-400",
-  SHIPPED: "bg-sky-500/15 text-sky-400",
-  OUT_FOR_DELIVERY: "bg-sky-500/15 text-sky-400",
-  DELIVERED: "bg-emerald-500/15 text-emerald-400",
-  CANCELLED: "bg-[var(--color-secondary)]/20 text-[var(--color-secondary)]",
-};
-
 function statusLabel(status: string): string {
   return status
     .split("_")
@@ -130,7 +120,7 @@ function TrackOrderContent() {
         const res = await fetch(`/api/orders/track/${encodeURIComponent(id)}`);
         const data = (await res.json()) as { error?: string } & TrackResult;
         if (!res.ok || !data.orderId) {
-          setError(data.error || "Order not found.");
+          setError(data.error || "Order not found. Please verify the ID.");
           return;
         }
         setTrackData({
@@ -205,43 +195,35 @@ function TrackOrderContent() {
   }, [urlOrderId]);
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 pb-24 pt-16 sm:px-6 lg:px-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8 text-center"
-      >
-        <p className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-[var(--color-primary-light)]">
-          <Truck size={13} />
-          Order Tracking
-        </p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-          Track your order
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-[var(--color-text-muted)]">
-          Enter your Order ID (e.g. VKXXXXXXXXXX) to see live status of your
-          delivery.
-        </p>
-      </motion.div>
+    <div className="min-h-screen bg-[#FAF9F6] pb-28 pt-24 text-[#171717]">
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <p className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#2D4A6B]">
+            <Truck size={14} />
+            Live Shipment Tracker
+          </p>
+          <h1 className="mt-2 font-serif text-3xl font-light tracking-tight text-[#171717] sm:text-4xl">
+            Track Your Order
+          </h1>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#666666]">
+            Enter your order reference number to follow the journey of your
+            tailored pieces.
+          </p>
+        </div>
 
-      {/* Track input */}
-      {!currentId && !loading && (
-        <motion.form
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+        {/* Search input bar */}
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             track(input);
           }}
-          className="glass-card mx-auto flex max-w-xl flex-col gap-3 p-5 sm:flex-row"
+          className="mx-auto flex max-w-xl flex-col gap-2 rounded-sm border border-[#E7E3DC] bg-white p-2 sm:flex-row"
         >
           <div className="relative flex-1">
             <PackageSearch
-              size={17}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+              size={16}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
             />
             <input
               value={input}
@@ -249,212 +231,214 @@ function TrackOrderContent() {
                 setInput(e.target.value.toUpperCase().replace(/\s/g, ""))
               }
               placeholder="e.g. VKABCD123456"
-              className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 py-3 pl-11 pr-3 font-mono text-sm tracking-wider text-[var(--color-text)] placeholder:font-sans placeholder:tracking-normal placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-light)]"
+              className="w-full bg-transparent py-2.5 pl-10 pr-3 font-mono text-xs uppercase tracking-wider text-[#171717] placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-[#999999] focus:outline-none"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary disabled:opacity-70"
+            className="inline-flex items-center justify-center gap-2 bg-[#171717] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-white hover:bg-[#2D4A6B] disabled:opacity-60"
           >
             {loading ? (
               <>
-                <LoaderCircle size={16} className="animate-spin" />
-                Tracking...
+                <LoaderCircle size={14} className="animate-spin" />
+                Searching…
               </>
             ) : (
               <>
-                <Search size={16} />
+                <Search size={14} />
                 Track
               </>
             )}
           </button>
-        </motion.form>
-      )}
+        </form>
 
-      {/* Error */}
-      {error && !currentId && (
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-[var(--color-secondary)]/30 bg-[var(--color-secondary)]/10 px-5 py-4 text-sm text-[var(--color-secondary)]"
-        >
-          <span>{error}</span>
-          <button
-            type="button"
-            onClick={() => setError("")}
-            className="shrink-0 text-xs font-semibold underline underline-offset-2"
-          >
-            Try again
-          </button>
-        </motion.div>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="mx-auto mt-10 max-w-2xl space-y-4">
-          <div className="glass-card p-8">
-            <div className="skeleton mb-2 h-6 w-48" />
-            <div className="skeleton mb-6 h-4 w-64" />
-            <div className="flex gap-3">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="skeleton h-20 w-full" />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Result */}
-      {trackData && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mt-10 space-y-6"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Order ID
-              </p>
-              <p className="mt-1 font-mono text-xl font-bold tracking-wide">
-                {currentId}
-              </p>
-            </div>
-            <span
-              className={`rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider ${STATUS_BADGE[trackData.orderStatus] || STATUS_BADGE.ORDER_PLACED}`}
+        {/* Error */}
+        {error && (
+          <div className="mx-auto mt-6 flex max-w-xl items-center justify-between rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="font-semibold underline"
             >
-              {statusLabel(trackData.orderStatus)}
-            </span>
+              Dismiss
+            </button>
           </div>
+        )}
 
-          <div className="glass-card overflow-x-auto p-6 sm:p-8">
-            <OrderTimeline orderStatus={trackData.orderStatus} />
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="mx-auto mt-10 max-w-3xl space-y-4">
+            <div className="h-40 w-full animate-pulse rounded-sm border border-[#E7E3DC] bg-white p-6" />
           </div>
+        )}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-[var(--color-border)] bg-white/[0.03] p-5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary-light)]">
-                <CalendarDays size={16} />
-              </span>
-              <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Order Date
-              </p>
-              <p className="mt-1 text-sm font-bold">
-                {formatDate(trackData.createdAt)}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-[var(--color-border)] bg-white/[0.03] p-5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary-light)]">
-                <Truck size={16} />
-              </span>
-              <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Estimated Delivery
-              </p>
-              <p className="mt-1 text-sm font-bold text-[var(--color-primary-light)]">
-                {formatDeliveryRange(trackData.shippingMethod)}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-[var(--color-border)] bg-white/[0.03] p-5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
-                <ArrowRight size={16} />
-              </span>
-              <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Payment
-              </p>
-              <p className="mt-1 text-sm font-bold">
-                {trackData.paymentStatus === "PAID" ? "Paid" : trackData.paymentStatus}
-              </p>
-            </div>
-          </div>
-
-          {/* Items */}
-          {fullOrder && fullOrder.items.length > 0 && (
-            <div className="glass-card p-6 sm:p-8">
-              <h2 className="mb-5 flex items-center gap-2 text-lg font-bold">
-                <PackageSearch size={18} className="text-[var(--color-primary-light)]" />
-                Items in this order
-              </h2>
-              <div className="space-y-4">
-                {fullOrder.items.map((item, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white/5">
-                      {item.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[var(--color-text-muted)]">
-                          <PackageSearch size={18} />
-                        </div>
-                      )}
-                      {item.quantity && item.quantity > 1 && (
-                        <span className="absolute bottom-0 right-0 flex h-5 min-w-5 items-center justify-center rounded-tl-lg bg-[var(--color-primary)] px-1 text-[10px] font-bold text-white">
-                          {item.quantity}×
-                        </span>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">{item.name}</p>
-                      <p className="text-xs text-[var(--color-text-muted)]">
-                        {item.size && `Size ${item.size}`}
-                        {item.size && item.color ? " · " : ""}
-                        {item.color}
-                      </p>
-                    </div>
-                    {typeof item.price === "number" && (
-                      <p className="text-sm font-bold">
-                        {inr(item.price * (item.quantity || 1))}
-                      </p>
-                    )}
-                  </div>
-                ))}
+        {/* Results */}
+        {trackData && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mt-10 space-y-8"
+          >
+            {/* Status Header */}
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-sm border border-[#E7E3DC] bg-white p-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#666666]">
+                  Order Number
+                </p>
+                <p className="mt-1 font-mono text-lg font-semibold tracking-wide text-[#171717]">
+                  {currentId}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#666666]">
+                  Current Status
+                </p>
+                <span className="mt-1 inline-block rounded bg-[#171717] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+                  {statusLabel(trackData.orderStatus)}
+                </span>
               </div>
             </div>
-          )}
 
-          {/* Address */}
-          {fullOrder?.address && (
-            <div className="glass-card p-6 sm:p-8">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
-                <MapPin size={18} className="text-[var(--color-primary-light)]" />
-                Delivery Address
+            {/* Timeline */}
+            <div className="rounded-sm border border-[#E7E3DC] bg-white p-6 sm:p-8">
+              <h2 className="mb-6 font-serif text-lg font-medium text-[#171717]">
+                Shipment Progress
               </h2>
-              <p className="font-semibold">{fullOrder.address.fullName || "—"}</p>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-muted)]">
-                {[
-                  fullOrder.address.addressLine1,
-                  fullOrder.address.addressLine2,
-                  fullOrder.address.city,
-                  fullOrder.address.state,
-                  fullOrder.address.pincode,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-              </p>
-              {fullOrder.address.phone && (
-                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                  {fullOrder.address.phone}
-                </p>
-              )}
+              <OrderTimeline orderStatus={trackData.orderStatus} />
             </div>
-          )}
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link href="/orders" className="btn btn-outline">
-              View My Orders
-              <ArrowRight size={15} />
-            </Link>
-            <Link href="/shop" className="btn btn-ghost">
-              Continue Shopping
-            </Link>
-          </div>
-        </motion.div>
-      )}
+            {/* Info Cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-sm border border-[#E7E3DC] bg-white p-5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FAF9F6] text-[#2D4A6B]">
+                  <CalendarDays size={16} />
+                </span>
+                <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#666666]">
+                  Placed On
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[#171717]">
+                  {formatDate(trackData.createdAt)}
+                </p>
+              </div>
+              <div className="rounded-sm border border-[#E7E3DC] bg-white p-5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FAF9F6] text-[#2D4A6B]">
+                  <Truck size={16} />
+                </span>
+                <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#666666]">
+                  Estimated Delivery
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[#171717]">
+                  {formatDeliveryRange(trackData.shippingMethod)}
+                </p>
+              </div>
+              <div className="rounded-sm border border-[#E7E3DC] bg-white p-5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FAF9F6] text-[#2D4A6B]">
+                  <ShieldCheck size={16} />
+                </span>
+                <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#666666]">
+                  Payment Status
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[#171717]">
+                  {trackData.paymentStatus === "PAID" ? "Confirmed & Paid" : trackData.paymentStatus}
+                </p>
+              </div>
+            </div>
+
+            {/* Items */}
+            {fullOrder && fullOrder.items.length > 0 && (
+              <div className="rounded-sm border border-[#E7E3DC] bg-white p-6 sm:p-8">
+                <h2 className="mb-5 font-serif text-lg font-medium text-[#171717]">
+                  Items in Package ({fullOrder.items.length})
+                </h2>
+                <div className="space-y-4">
+                  {fullOrder.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between gap-4 border-b border-[#E7E3DC] pb-4 last:border-b-0 last:pb-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-sm border border-[#E7E3DC] bg-[#FAF9F6]">
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-[#999999]">
+                              <PackageSearch size={14} />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-[#171717]">
+                            {item.name}
+                          </p>
+                          <p className="text-[11px] text-[#666666]">
+                            {item.size && `Size ${item.size}`}
+                            {item.size && item.color ? " · " : ""}
+                            {item.color}
+                            {item.quantity && item.quantity > 1 ? ` · Qty: ${item.quantity}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      {typeof item.price === "number" && (
+                        <p className="text-xs font-semibold text-[#171717]">
+                          {inr(item.price * (item.quantity || 1))}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Delivery destination */}
+            {fullOrder?.address && (
+              <div className="rounded-sm border border-[#E7E3DC] bg-white p-6">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#666666]">
+                  <MapPin size={14} />
+                  Delivery Destination
+                </div>
+                <p className="mt-3 text-sm font-semibold text-[#171717]">
+                  {fullOrder.address.fullName || "—"}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-[#666666]">
+                  {[
+                    fullOrder.address.addressLine1,
+                    fullOrder.address.addressLine2,
+                    fullOrder.address.city,
+                    fullOrder.address.state,
+                    fullOrder.address.pincode,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-4 pt-2">
+              <Link
+                href="/account/orders"
+                className="inline-flex items-center gap-2 bg-[#171717] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-white hover:bg-[#2D4A6B]"
+              >
+                All Orders
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                href="/shop"
+                className="border border-[#E7E3DC] bg-white px-6 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-[#666666] hover:text-[#171717]"
+              >
+                Continue Shopping
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 }
@@ -464,7 +448,7 @@ export default function TrackOrderPage() {
     <Suspense
       fallback={
         <div className="flex min-h-[70vh] items-center justify-center">
-          <div className="skeleton h-24 w-24 rounded-2xl" />
+          <LoaderCircle size={32} className="animate-spin text-[#2D4A6B]" />
         </div>
       }
     >

@@ -41,6 +41,11 @@ export async function POST(request: NextRequest) {
       provider: provider as "google",
       options: {
         redirectTo,
+        skipBrowserRedirect: false,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
 
@@ -91,6 +96,10 @@ export async function GET(request: NextRequest) {
       provider: provider as "google",
       options: {
         redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
 

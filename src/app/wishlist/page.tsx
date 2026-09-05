@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   ArrowRight,
   Heart,
-  PackageOpen,
-  RefreshCcw,
   ShoppingBag,
+  Trash2,
+  LoaderCircle,
+  PackageOpen,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { useCartStore } from "@/lib/cart-store";
@@ -22,323 +22,6 @@ type WishlistItemWithDiscount = WishlistItem & { oldPrice?: number };
 const formatPrice = (value: number) =>
   `₹${Number(value).toLocaleString("en-IN")}`;
 
-function discountPercent(oldPrice?: number, price?: number): number | null {
-  if (!oldPrice || !price || oldPrice <= price) return null;
-  return Math.round(((oldPrice - price) / oldPrice) * 100);
-}
-
-/* ------------------------------------------------------------------ */
-/* Skeleton                                                            */
-/* ------------------------------------------------------------------ */
-
-function WishlistSkeleton() {
-  return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="glass-card overflow-hidden">
-          <div className="skeleton aspect-[4/5] rounded-none" />
-          <div className="flex flex-col gap-2 p-4">
-            <div className="skeleton h-4 w-3/4" />
-            <div className="skeleton h-3 w-1/3" />
-            <div className="skeleton mt-2 h-10 w-full rounded-xl" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Login prompt                                                        */
-/* ------------------------------------------------------------------ */
-
-function LoginPrompt() {
-  return (
-    <section className="relative mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center px-4 py-24 text-center">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="glass-card w-full p-10 sm:p-14"
-      >
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/25 to-[var(--color-secondary)]/20">
-          <Heart size={28} className="text-[var(--color-primary-light)]" />
-        </div>
-        <h1 className="text-3xl font-black tracking-tight text-[var(--color-text)]">
-          Please login to view your wishlist
-        </h1>
-        <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-[var(--color-text-muted)]">
-          Your saved divine pieces are waiting for you. Sign in to see the
-          styles you&apos;ve loved.
-        </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href="/login" className="btn btn-primary">
-            Login
-          </Link>
-          <Link href="/register" className="btn btn-ghost">
-            Create an account
-          </Link>
-        </div>
-        <div className="mt-6">
-          <Link
-            href="/shop"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--color-primary-light)] transition-colors hover:text-[var(--color-secondary)]"
-          >
-            <ArrowLeft size={14} />
-            Continue browsing the collection
-          </Link>
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Empty state                                                         */
-/* ------------------------------------------------------------------ */
-
-function EmptyWishlist() {
-  return (
-    <section className="relative mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-4 py-24 text-center">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="glass-card w-full p-10 sm:p-14"
-      >
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/25 to-[var(--color-secondary)]/20">
-          <PackageOpen size={28} className="text-[var(--color-primary-light)]" />
-        </div>
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">
-          Your wishlist is empty
-        </h1>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[var(--color-text-muted)]">
-          You haven&apos;t saved anything yet. Tap the heart on any product to
-          add it to your wishlist.
-        </p>
-        <Link href="/shop" className="btn btn-primary mt-7 inline-flex">
-          Shop Now
-          <ArrowRight size={16} />
-        </Link>
-      </motion.div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Error state                                                         */
-/* ------------------------------------------------------------------ */
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <section className="relative mx-auto flex min-h-[50vh] max-w-3xl flex-col items-center justify-center px-4 py-24 text-center">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="glass-card w-full p-10 sm:p-14"
-      >
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/25 to-[var(--color-secondary)]/20">
-          <RefreshCcw size={26} className="text-[var(--color-primary-light)]" />
-        </div>
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">
-          Couldn&apos;t load your wishlist
-        </h1>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[var(--color-text-muted)]">
-          Something went wrong while fetching your saved pieces. Please try
-          again.
-        </p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="btn btn-primary mt-7 inline-flex"
-        >
-          <RefreshCcw size={15} />
-          Retry
-        </button>
-      </motion.div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Wishlist card                                                       */
-/* ------------------------------------------------------------------ */
-
-function WishlistCard({
-  item,
-  onRemove,
-  onMoveToCart,
-  busy,
-}: {
-  item: WishlistItemWithDiscount;
-  onRemove: () => void;
-  onMoveToCart: () => void;
-  busy: "remove" | "move" | null;
-}) {
-  const price = Number(item.price) || 0;
-  const oldPrice = item.oldPrice ? Number(item.oldPrice) : undefined;
-  const discount = discountPercent(oldPrice, price);
-  const outOfStock = typeof item.stock === "number" && item.stock <= 0;
-  const removeBusy = busy === "remove" || busy === "move";
-  const moveBusy = busy === "move";
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="glass-card group relative overflow-hidden"
-    >
-      {/* Image */}
-      <Link
-        href={`/product/${item.slug || item.productId}`}
-        className="relative block aspect-[4/5] overflow-hidden"
-      >
-        {item.image ? (
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            sizes="(max-width: 768px) 50vw, 25vw"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/5 to-white/0">
-            <span className="text-xs text-[var(--color-text-muted)]">No image</span>
-          </div>
-        )}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent" />
-
-        {discount && (
-          <div className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-primary)] px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
-            -{discount}%
-          </div>
-        )}
-
-        {outOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/55 backdrop-blur-[2px]">
-            <span className="rounded-full border border-white/20 bg-black/60 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
-              Out of stock
-            </span>
-          </div>
-        )}
-      </Link>
-
-      {/* Info */}
-      <div className="flex flex-col gap-2 p-4">
-        <Link
-          href={`/product/${item.slug || item.productId}`}
-          className="line-clamp-2 text-sm font-medium leading-snug text-[var(--color-text)] transition-colors group-hover:text-[var(--color-primary-light)]"
-        >
-          {item.name}
-        </Link>
-
-        <div className="flex items-baseline gap-2">
-          <span className="text-base font-bold text-[var(--color-text)]">
-            {formatPrice(price)}
-          </span>
-          {oldPrice && oldPrice > price && (
-            <span className="text-sm text-[var(--color-text-muted)] line-through">
-              {formatPrice(oldPrice)}
-            </span>
-          )}
-        </div>
-
-        <span
-          className={`text-[11px] font-medium ${
-            outOfStock
-              ? "text-[var(--color-secondary)]"
-              : typeof item.stock === "number" && item.stock <= 10
-                ? "text-amber-400"
-                : "text-emerald-400"
-          }`}
-        >
-          {outOfStock
-            ? "Out of stock"
-            : typeof item.stock === "number" && item.stock <= 10
-              ? "Only few left"
-              : "In stock"}
-        </span>
-
-        <div className="mt-1 flex items-center gap-2">
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.94 }}
-            onClick={onMoveToCart}
-            disabled={outOfStock || busy !== null}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-300 ${
-              outOfStock
-                ? "cursor-not-allowed bg-white/5 text-[var(--color-text-muted)]"
-                : "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white hover:shadow-lg hover:shadow-[var(--color-primary)]/40"
-            } disabled:cursor-not-allowed disabled:opacity-50`}
-          >
-            {moveBusy ? (
-              <LoaderIcon />
-            ) : (
-              <ShoppingBag size={14} />
-            )}
-            {moveBusy ? "Moving…" : "Move to Cart"}
-          </motion.button>
-
-          <button
-            type="button"
-            onClick={onRemove}
-            disabled={busy !== null}
-            aria-label={`Remove ${item.name} from wishlist`}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] transition-colors hover:border-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <motion.span
-              key={removeBusy ? "busy" : "idle"}
-              initial={removeBusy ? { scale: 0.4 } : false}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-              className="flex items-center justify-center"
-            >
-              <Heart
-                size={17}
-                fill={removeBusy ? "transparent" : "#ec4899"}
-                color={removeBusy ? "currentColor" : "#ec4899"}
-              />
-            </motion.span>
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function LoaderIcon() {
-  return (
-    <svg
-      className="h-3.5 w-3.5 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-      />
-    </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
-
 export default function WishlistPage() {
   const addToast = useToastStore((s) => s.addToast);
 
@@ -348,157 +31,232 @@ export default function WishlistPage() {
   const items = useWishlistStore((s) => s.items);
   const wishlistLoading = useWishlistStore((s) => s.loading);
   const fetchWishlist = useWishlistStore((s) => s.fetchWishlist);
-  const toggleWishlist = useWishlistStore((s) => s.toggleItem);
+  const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
+  const addItemToCart = useCartStore((s) => s.addItem);
 
-  const addItem = useCartStore((s) => s.addItem);
-
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [error, setError] = useState(false);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [busyAction, setBusyAction] = useState<"remove" | "move" | null>(null);
+  const [movingId, setMovingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!initialized || !user) return;
-    let active = true;
-    fetchWishlist()
-      .catch(() => {
-        if (active) setError(true);
-      })
-      .finally(() => {
-        if (active) setError(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [fetchWishlist, user, initialized, refreshKey]);
+    if (initialized && user) {
+      fetchWishlist();
+    }
+  }, [initialized, user, fetchWishlist]);
 
-  const itemsWithDiscount = useMemo<WishlistItemWithDiscount[]>(
-    () => items as WishlistItemWithDiscount[],
-    [items],
-  );
+  const handleMoveToCart = async (item: WishlistItemWithDiscount) => {
+    setMovingId(item.productId);
+    try {
+      await addItemToCart(item.productId, "M", "Standard", 1);
+      await removeFromWishlist(item.productId);
+      addToast("Moved to your shopping bag", "success");
+    } catch {
+      addToast("Failed to move piece to bag", "error");
+    } finally {
+      setMovingId(null);
+    }
+  };
 
-  const handleRetry = useCallback(() => {
-    setError(false);
-    setRefreshKey((k) => k + 1);
-  }, []);
+  const handleRemove = async (productId: string) => {
+    setRemovingId(productId);
+    try {
+      await removeFromWishlist(productId);
+      addToast("Removed from wishlist", "info");
+    } catch {
+      addToast("Failed to remove piece", "error");
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
-  const handleRemove = useCallback(
-    async (item: WishlistItem) => {
-      setBusyId(item.productId);
-      setBusyAction("remove");
-      const ok = await toggleWishlist(item.productId);
-      if (ok) addToast(`${item.name} removed from wishlist`, "success");
-      else addToast("Could not remove item", "error");
-      setBusyId(null);
-      setBusyAction(null);
-    },
-    [toggleWishlist, addToast],
-  );
-
-  const handleMoveToCart = useCallback(
-    async (item: WishlistItem) => {
-      setBusyId(item.productId);
-      setBusyAction("move");
-
-      const moved = await addItem(item.productId, "", "", 1);
-      if (moved) {
-        const removed = await toggleWishlist(item.productId);
-        if (removed) {
-          addToast(`${item.name} moved to cart`, "success");
-        } else {
-          addToast(`${item.name} added to cart`, "success");
-        }
-      } else {
-        addToast("Could not add to cart", "error");
-      }
-
-      setBusyId(null);
-      setBusyAction(null);
-    },
-    [addItem, toggleWishlist, addToast],
-  );
-
-  /* Auth gating */
-  if (!initialized || (initialized && user && wishlistLoading && items.length === 0)) {
+  if (!initialized) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pt-28 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-[var(--color-primary-light)]">
-            <Heart size={13} />
-            Saved pieces
-          </p>
-          <h1 className="text-3xl font-black tracking-tight text-[var(--color-text)] sm:text-4xl">
-            Wishlist
-          </h1>
-        </div>
-        <WishlistSkeleton />
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <LoaderCircle size={32} className="animate-spin text-[#2D4A6B]" />
       </div>
     );
   }
 
-  if (initialized && !user) {
-    return <LoginPrompt />;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] pb-28 pt-28 text-[#171717]">
+        <div className="mx-auto max-w-lg px-4 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#F4F1EA] text-[#171717]">
+            <Heart size={28} strokeWidth={1.5} />
+          </div>
+          <h1 className="font-serif text-2xl font-light text-[#171717] sm:text-3xl">
+            Saved Pieces
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-[#666666]">
+            Sign in to sync your saved items across devices and receive private
+            notices when your desired pieces become available.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              href="/login?redirect=/wishlist"
+              className="inline-flex items-center justify-center bg-[#171717] px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-[#2D4A6B]"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-flex items-center justify-center border border-[#E7E3DC] bg-white px-8 py-3.5 text-xs font-medium uppercase tracking-[0.18em] text-[#171717] hover:border-[#171717]"
+            >
+              Explore Store
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-[var(--color-primary-light)]">
-            <Heart size={13} />
-            Saved pieces
-          </p>
-          <h1 className="text-3xl font-black tracking-tight text-[var(--color-text)] sm:text-4xl">
-            Your Wishlist
-            {items.length > 0 && (
-              <span className="ml-3 align-middle text-sm font-semibold text-[var(--color-text-muted)]">
-                {items.length} item{items.length === 1 ? "" : "s"}
-              </span>
-            )}
-          </h1>
+    <div className="min-h-screen bg-[#FAF9F6] pb-28 pt-24 text-[#171717]">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-10 flex flex-wrap items-baseline justify-between gap-4 border-b border-[#E7E3DC] pb-6">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#2D4A6B]">
+              Personal Curation
+            </p>
+            <h1 className="mt-2 font-serif text-3xl font-light tracking-tight text-[#171717] sm:text-4xl">
+              Saved Pieces ({items.length})
+            </h1>
+          </div>
+          <Link
+            href="/shop"
+            className="text-xs font-medium uppercase tracking-[0.18em] text-[#666666] hover:text-[#171717]"
+          >
+            Continue Shopping →
+          </Link>
         </div>
 
-        <Link
-          href="/shop"
-          className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-2.5 text-sm font-semibold text-[var(--color-primary-light)] transition-colors hover:border-[var(--color-primary-light)]/40 hover:bg-white/10"
-        >
-          <ShoppingBag size={15} />
-          Shop more
-        </Link>
-      </div>
-
-      {error ? (
-        <ErrorState onRetry={handleRetry} />
-      ) : items.length === 0 ? (
-        <EmptyWishlist />
-      ) : (
-        <>
-          <motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <AnimatePresence mode="popLayout">
-              {itemsWithDiscount.map((item) => (
-                <WishlistCard
-                  key={item.productId}
-                  item={item}
-                  busy={busyId === item.productId ? busyAction : null}
-                  onRemove={() => handleRemove(item)}
-                  onMoveToCart={() => handleMoveToCart(item)}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
-
-          <div className="mt-12">
+        {/* Loading state */}
+        {wishlistLoading && items.length === 0 ? (
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="animate-pulse space-y-3">
+                <div className="aspect-[3/4] w-full rounded-sm bg-[#F4F1EA]" />
+                <div className="h-4 w-3/4 rounded bg-[#F4F1EA]" />
+                <div className="h-3 w-1/2 rounded bg-[#F4F1EA]" />
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="mx-auto max-w-md py-16 text-center">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#F4F1EA] text-[#666666]">
+              <PackageOpen size={28} strokeWidth={1.5} />
+            </div>
+            <h2 className="font-serif text-xl font-light text-[#171717]">
+              Your wishlist is waiting
+            </h2>
+            <p className="mt-2 text-xs leading-relaxed text-[#666666]">
+              Browse the latest arrivals and touch the heart symbol on any piece
+              to preserve it in your personal collection.
+            </p>
             <Link
               href="/shop"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary-light)] transition-colors hover:text-[var(--color-secondary)]"
+              className="mt-6 inline-flex items-center gap-2 bg-[#171717] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-[#2D4A6B]"
             >
-              <ArrowLeft size={15} />
-              Continue shopping
+              Discover Collection
+              <ArrowRight size={14} />
             </Link>
           </div>
-        </>
-      )}
+        ) : (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+            {items.map((item) => {
+              const moving = movingId === item.productId;
+              const removing = removingId === item.productId;
+              const outOfStock =
+                typeof item.stock === "number" && item.stock <= 0;
+
+              return (
+                <motion.div
+                  key={item.productId}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="group relative flex flex-col justify-between rounded-sm border border-[#E7E3DC] bg-white transition-shadow hover:shadow-sm"
+                >
+                  {/* Image container */}
+                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#FAF9F6]">
+                    <Link href={`/product/${item.slug || item.productId}`}>
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          sizes="(max-width: 640px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-[#999999]">
+                          VRINDAV
+                        </div>
+                      )}
+                    </Link>
+
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(item.productId)}
+                      disabled={removing}
+                      aria-label="Remove item"
+                      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#666666] shadow-sm backdrop-blur-sm transition-colors hover:text-red-600 disabled:opacity-50"
+                    >
+                      {removing ? (
+                        <LoaderCircle size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                    </button>
+
+                    {outOfStock && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                        <span className="rounded-sm bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#171717]">
+                          Out of Stock
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Details */}
+                  <div className="flex flex-1 flex-col justify-between p-4">
+                    <div>
+                      <Link
+                        href={`/product/${item.slug || item.productId}`}
+                        className="line-clamp-1 text-xs font-semibold text-[#171717] hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                      <p className="mt-1 text-xs font-medium text-[#171717]">
+                        {formatPrice(item.price)}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleMoveToCart(item)}
+                      disabled={outOfStock || moving}
+                      className="mt-4 flex w-full items-center justify-center gap-1.5 border border-[#171717] py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#171717] transition-colors hover:bg-[#171717] hover:text-white disabled:border-[#E7E3DC] disabled:text-[#999999] disabled:hover:bg-transparent"
+                    >
+                      {moving ? (
+                        <>
+                          <LoaderCircle size={13} className="animate-spin" />
+                          Moving…
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag size={13} />
+                          Move to Bag
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

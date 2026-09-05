@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
@@ -47,53 +48,48 @@ export const COLOR_SWATCHES: { name: string; hex: string }[] = [
 ];
 
 export const SORT_OPTIONS = [
-  { value: "popular", label: "Popular" },
+  { value: "popular", label: "Recommended" },
   { value: "newest", label: "Newest" },
   { value: "price-asc", label: "Price: Low to High" },
   { value: "price-desc", label: "Price: High to Low" },
-  { value: "rating", label: "Rating" },
+  { value: "rating", label: "Best Selling" },
 ] as const;
 
 export type SortValue = (typeof SORT_OPTIONS)[number]["value"];
 
 export const CATEGORY_HERO: Record<
   Category,
-  { name: string; tagline: string; description: string; gradient: string }
+  { name: string; tagline: string; description: string; image: string }
 > = {
   MEN: {
     name: "Men",
-    tagline: "Regal & Refined",
-    description:
-      "Modern menswear steeped in devotion — tailored kurta sets, breezy linen kurtas and statement ensembles crafted for the man who carries grace effortlessly.",
-    gradient: "from-indigo-600/80 to-purple-700/80",
+    tagline: "Krishna Inspiration",
+    description: "Modern silhouettes shaped by timeless inspiration.",
+    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=1400&auto=format&fit=crop",
   },
   WOMEN: {
     name: "Women",
-    tagline: "Graceful Silhouettes",
-    description:
-      "Flowing dresses, embroidered co-ord sets and ethereal sarees that echo the timeless elegance of the gopis — made to move, made to be adored.",
-    gradient: "from-pink-600/80 to-rose-600/80",
+    tagline: "Radha Inspiration",
+    description: "Graceful forms and ethereal silhouettes inspired by Radha.",
+    image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1400&auto=format&fit=crop",
   },
   UNISEX: {
     name: "Unisex",
-    tagline: "Made for Every Soul",
-    description:
-      "Versatile shapes, devotional graphics and comfort-first fabrics designed to be shared and worn by any soul that feels the pull of Vrindavan.",
-    gradient: "from-violet-600/80 to-fuchsia-600/80",
+    tagline: "Devotional Forms",
+    description: "Versatile, relaxed silhouettes designed to be shared and worn with devotion.",
+    image: "https://images.unsplash.com/photo-1583743814966-8066b5dc11c7?q=80&w=1400&auto=format&fit=crop",
   },
   KIDS: {
     name: "Kids",
-    tagline: "Little Miracles",
-    description:
-      "Playful, safe and squeezably soft outfits for your little miracles — everyday comfort wrapped in joyful colour and gentle charm.",
-    gradient: "from-amber-500/80 to-pink-500/80",
+    tagline: "Gentle Devotion",
+    description: "Soft, breathable garments for joyful everyday comfort.",
+    image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=1400&auto=format&fit=crop",
   },
   ACCESSORIES: {
     name: "Accessories",
-    tagline: "Finishing Divine Touches",
-    description:
-      "Sacred malas, embroidered bags, dupattas and handcrafted treasures that complete every look with a whisper of divinity.",
-    gradient: "from-cyan-500/80 to-purple-600/80",
+    tagline: "Timeless Adornments",
+    description: "Subtle details inspired by timeless sacred symbolism.",
+    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1400&auto=format&fit=crop",
   },
 };
 
@@ -847,19 +843,24 @@ export default function ShopPageContent({
     <>
       {/* Category hero banner */}
       {showHero && hero && (
-        <section className="relative overflow-hidden border-b border-[var(--color-border)]">
-          <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,transparent_20%,rgba(10,10,20,0.7)_100%)]" />
-          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-black/30 blur-3xl" />
+        <section className="relative overflow-hidden border-b border-[var(--color-border)] h-72 sm:h-80 flex items-center">
+          <Image
+            src={hero.image}
+            alt={hero.name}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-black/45" />
 
-          <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-28 sm:px-6 lg:px-8">
+          <div className="relative mx-auto max-w-[80rem] w-full px-4 sm:px-6 lg:px-8">
             <motion.nav
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               aria-label="Breadcrumb"
-              className="mb-6 flex items-center gap-2 text-xs font-medium text-white/70"
+              className="mb-4 flex items-center gap-2 text-xs font-medium text-white/80"
             >
               <Link href="/" className="transition-colors hover:text-white">
                 Home
@@ -873,18 +874,17 @@ export default function ShopPageContent({
             </motion.nav>
 
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             >
-              <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.35em] text-white/90">
-                <Feather size={14} />
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/80">
                 {hero.tagline}
               </p>
-              <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.4)] sm:text-5xl">
+              <h1 className="font-serif text-4xl sm:text-5xl font-normal text-white">
                 {hero.name}
               </h1>
-              <p className="mt-4 max-w-2xl text-sm font-light leading-relaxed text-white/85 sm:text-base">
+              <p className="mt-2 max-w-xl text-xs sm:text-sm font-light leading-relaxed text-white/90">
                 {hero.description}
               </p>
             </motion.div>
@@ -899,17 +899,17 @@ export default function ShopPageContent({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="glass-card w-full p-10 sm:p-14"
+            className="card w-full p-10 sm:p-14"
           >
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/25 to-[var(--color-secondary)]/20">
-              <PackageOpen size={28} className="text-[var(--color-primary-light)]" />
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-muted)]">
+              <PackageOpen size={28} className="text-[var(--color-accent)]" />
             </div>
-            <h1 className="text-2xl font-bold text-[var(--color-text)]">
+            <h1 className="font-serif text-2xl font-normal text-[var(--color-text)]">
               Category not found
             </h1>
             <p className="mt-3 text-sm text-[var(--color-text-muted)]">
               We couldn&apos;t find &ldquo;{(presetCategory ?? "").toUpperCase()}&rdquo;.
-              Explore your favourite divine collections below.
+              Explore your favourite collections below.
             </p>
             <Link
               href="/shop"
@@ -920,35 +920,29 @@ export default function ShopPageContent({
           </motion.div>
         </section>
       ) : (
-        <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <section className="mx-auto w-full max-w-[80rem] px-4 py-10 sm:px-6 lg:px-8">
           {/* Page header */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-8"
-          >
-            <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-[var(--color-primary-light)]">
-              <Feather size={14} />
-              {showHero ? "Collection" : "Curated for you"}
+          <div className="mb-10">
+            <p className="mb-2 text-xs font-medium uppercase tracking-[0.28em] text-[var(--color-accent)]">
+              {showHero ? `${hero?.name} Collection` : "VRINDAV COLLECTION"}
             </p>
-            <h1 className="text-3xl font-black tracking-tight text-[var(--color-text)] sm:text-4xl">
-              {showHero && hero ? `${hero.name} Collection` : "ALL PRODUCTS"}
+            <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[var(--color-text)]">
+              {showHero && hero ? `${hero.name}` : "SHOP"}
             </h1>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               {showHero && hero
-                ? "Every piece woven with devotion — find yours."
-                : "Divine style for every soul — discover the eternal bond in every thread."}
+                ? hero.description
+                : "Explore the VRINDAV collection."}
             </p>
-          </motion.div>
+          </div>
 
           <div className="flex flex-col gap-8 lg:flex-row">
             {/* Desktop sidebar */}
             <aside className="hidden w-64 shrink-0 lg:block">
-              <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-8 overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 p-6 backdrop-blur-xl">
+              <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-8 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 text-sm font-bold tracking-wide text-[var(--color-text)]">
-                    <Filter size={15} className="text-[var(--color-primary-light)]" />
+                  <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text)]">
+                    <Filter size={14} className="text-[var(--color-accent)]" />
                     Filters
                   </h2>
                 </div>
@@ -975,22 +969,22 @@ export default function ShopPageContent({
             <div className="min-w-0 flex-1">
               {/* Toolbar */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-[var(--color-text-muted)]">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   {loading && !error
-                    ? "Loading products…"
-                    : `Showing ${resultStart}–${resultEnd} of ${filteredProducts.length} products`}
+                    ? "Loading collection…"
+                    : `Showing ${resultStart}–${resultEnd} of ${filteredProducts.length} pieces`}
                 </p>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setDrawerOpen(true)}
-                    className="relative flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-2.5 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-white/10 lg:hidden"
+                    className="relative flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-4 py-2 text-xs font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-muted)] lg:hidden shadow-xs"
                   >
-                    <Filter size={15} className="text-[var(--color-primary-light)]" />
+                    <Filter size={13} className="text-[var(--color-accent)]" />
                     Filters
                     {activeFilterCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] px-1 text-[10px] font-bold text-white">
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-accent)] px-1 text-[9px] font-semibold text-white">
                         {activeFilterCount}
                       </span>
                     )}
@@ -1008,15 +1002,15 @@ export default function ShopPageContent({
 
               {/* Content states */}
               {error ? (
-                <div className="glass-card mx-auto mt-16 max-w-md p-10 text-center">
-                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/25 to-[var(--color-secondary)]/20">
-                    <PackageOpen size={26} className="text-[var(--color-primary-light)]" />
+                <div className="card mx-auto mt-16 max-w-md p-10 text-center">
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-muted)] text-[var(--color-accent)]">
+                    <PackageOpen size={24} />
                   </div>
-                  <h3 className="text-lg font-bold text-[var(--color-text)]">
-                    Something went wrong
+                  <h3 className="font-serif text-lg font-medium text-[var(--color-text)]">
+                    Unable to load pieces
                   </h3>
-                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                    We couldn&apos;t load the products. Please try again.
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                    Please refresh or try again in a moment.
                   </p>
                   <button
                     type="button"
@@ -1106,7 +1100,7 @@ export default function ShopPageContent({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-50 bg-[#171717]/40 backdrop-blur-xs lg:hidden"
               onClick={() => setDrawerOpen(false)}
               aria-hidden="true"
             />
@@ -1115,17 +1109,17 @@ export default function ShopPageContent({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 right-0 top-0 z-50 w-80 max-w-[85vw] border-l border-[var(--color-border)] bg-[var(--color-bg-secondary)]/95 backdrop-blur-xl lg:hidden"
+              className="fixed bottom-0 right-0 top-0 z-50 w-80 max-w-[85vw] border-l border-[var(--color-border)] bg-[var(--color-bg)] shadow-2xl lg:hidden"
               role="dialog"
               aria-label="Filters"
             >
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
-                  <h2 className="flex items-center gap-2 text-base font-bold text-[var(--color-text)]">
-                    <Filter size={17} className="text-[var(--color-primary-light)]" />
+                  <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-[var(--color-text)]">
+                    <Filter size={15} className="text-[var(--color-accent)]" />
                     Filters
                     {activeFilterCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] px-1 text-[10px] font-bold text-white">
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-accent)] px-1 text-[9px] font-semibold text-white">
                         {activeFilterCount}
                       </span>
                     )}
@@ -1133,10 +1127,10 @@ export default function ShopPageContent({
                   <button
                     type="button"
                     onClick={() => setDrawerOpen(false)}
-                    className="rounded-full p-2 text-[var(--color-text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--color-text)]"
+                    className="rounded-full p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
                     aria-label="Close filters"
                   >
-                    <X size={20} />
+                    <X size={18} />
                   </button>
                 </div>
 

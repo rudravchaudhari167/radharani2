@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ShieldCheck, Lock } from "lucide-react";
 
 declare global {
   interface Window {
@@ -33,7 +34,7 @@ interface PaymentButtonProps {
 }
 
 const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
-const THEME_COLOR = "#7c3aed";
+const THEME_COLOR = "#2D4A6B"; // Luxury royal blue accent
 
 function loadRazorpayScript(): Promise<boolean> {
   if (typeof window !== "undefined" && window.Razorpay) {
@@ -42,7 +43,7 @@ function loadRazorpayScript(): Promise<boolean> {
 
   return new Promise((resolve) => {
     const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${RAZORPAY_SCRIPT_URL}"]`,
+      `script[src="${RAZORPAY_SCRIPT_URL}"]`
     );
     if (existing) {
       existing.addEventListener("load", () => resolve(true));
@@ -82,22 +83,21 @@ export default function PaymentButton({
 
   const handlePayment = async () => {
     if (invalid) {
-      onFailure("Unable to initialise payment. Please try again.");
+      onFailure("Unable to initialise payment. Please check required details.");
       return;
     }
 
     setLoading(true);
 
     if (sandbox) {
-      // Development sandbox — simulates the payment provider handshake so the
-      // full journey is testable without live Razorpay credentials.
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      // Dev Sandbox simulation when test credentials are placeholders
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const orderId =
         propOrderId ||
         String(
           (typeof window !== "undefined" &&
             (window as unknown as Record<string, unknown>).__vrindavOrderId) ||
-            "",
+            `sandbox_${Date.now()}`
         );
       onSuccess({
         razorpayPaymentId: `sandbox_pay_${Date.now()}`,
@@ -111,19 +111,18 @@ export default function PaymentButton({
     try {
       const loaded = await loadRazorpayScript();
       if (!loaded || !window.Razorpay) {
-        onFailure(
-          "Could not load the payment gateway. Please check your connection.",
-        );
+        onFailure("Could not load the payment gateway. Please check your internet connection.");
+        setLoading(false);
         return;
       }
 
-      const options = {
+      const options: Record<string, unknown> = {
         key: keyId,
         amount: amountInPaise,
         currency: "INR",
-        name: "Radha Rani",
-        description:
-          orderDetails.description || "Your divine order at Radha Rani",
+        name: "VRINDAV",
+        description: orderDetails.description || "Divine Style. Eternal Bond.",
+        order_id: propOrderId || undefined, // Binds payment to server order for UPI/Cards/NetBanking
         prefill: {
           name: orderDetails.prefill.name || "",
           email: orderDetails.prefill.email || "",
@@ -131,6 +130,12 @@ export default function PaymentButton({
         },
         theme: {
           color: THEME_COLOR,
+          backdrop_color: "#FAF9F6",
+        },
+        modal: {
+          ondismiss: () => {
+            onFailure("Payment was cancelled by the user.");
+          },
         },
         handler: (response: {
           razorpay_payment_id?: string;
@@ -148,24 +153,15 @@ export default function PaymentButton({
               razorpaySignature: response.razorpay_signature,
             });
           } else {
-            onFailure(
-              "Payment could not be verified. Please check your transactions.",
-            );
+            onFailure("Payment could not be verified. Please check your account or contact support.");
           }
-        },
-        modal: {
-          ondismiss: () => {
-            onFailure("Payment was cancelled.");
-          },
         },
       };
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch {
-      onFailure(
-        "A network error occurred while processing your payment. Please try again.",
-      );
+      onFailure("An error occurred while opening the payment gateway. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -176,41 +172,34 @@ export default function PaymentButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handlePayment}
-      disabled={loading}
-      className="btn btn-primary h-12 w-full rounded-2xl text-base font-bold disabled:opacity-70"
-    >
-      {loading ? (
-        <>
-          <svg
-            className="h-4 w-4 animate-spin"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            />
-          </svg>
-          Processing payment...
-        </>
-      ) : sandbox ? (
-        <>Simulate Test Payment (₹{amount.toLocaleString("en-IN")})</>
-      ) : (
-        <>Pay ₹{amount.toLocaleString("en-IN")} securely</>
-      )}
-    </button>
+    <div className="space-y-3">
+      <button
+        type="button"
+        onClick={handlePayment}
+        disabled={loading}
+        className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--color-accent)] px-8 text-xs font-semibold uppercase tracking-[0.16em] text-white shadow-sm transition-all hover:bg-[var(--color-accent-light)] disabled:opacity-60"
+      >
+        {loading ? (
+          <>
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <span>Processing...</span>
+          </>
+        ) : (
+          <>
+            <Lock size={14} />
+            <span>Pay ₹{amount.toLocaleString("en-IN")} via Razorpay</span>
+          </>
+        )}
+      </button>
+
+      <div className="flex items-center justify-center gap-3 text-[11px] text-[var(--color-text-muted)]">
+        <span className="flex items-center gap-1">
+          <ShieldCheck size={13} className="text-[var(--color-accent)]" />
+          UPI, Cards, NetBanking, Wallets
+        </span>
+        <span>&bull;</span>
+        <span>256-Bit SSL Encrypted</span>
+      </div>
+    </div>
   );
 }

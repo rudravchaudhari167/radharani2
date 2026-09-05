@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Heart, ShoppingBag, Star, Eye } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import { useWishlistStore } from "@/lib/wishlist-store";
 import { useCartStore } from "@/lib/cart-store";
 import { useToastStore } from "@/lib/toast-store";
@@ -23,6 +22,8 @@ export interface ProductCardProduct {
   sizes?: string[];
   colors?: { name: string; hex: string }[];
   category?: string;
+  featured?: boolean;
+  isNewArrival?: boolean;
 }
 
 interface ProductCardProps {
@@ -31,19 +32,12 @@ interface ProductCardProps {
   eager?: boolean;
 }
 
-function discountPercent(old?: number, price?: number): number | null {
-  if (!old || !price || old <= price) return null;
-  return Math.round(((old - price) / old) * 100);
-}
-
 export default function ProductCard({
   product,
-  index = 0,
   eager = false,
 }: ProductCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [added, setAdded] = useState(false);
-  const [quickView, setQuickView] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [quickAdding, setQuickAdding] = useState(false);
 
   const addToast = useToastStore((s) => s.addToast);
   const addItem = useCartStore((s) => s.addItem);
@@ -52,266 +46,204 @@ export default function ProductCard({
 
   const price = Number(product.price) || 0;
   const oldPrice = product.oldPrice ? Number(product.oldPrice) : undefined;
-  const discount = discountPercent(oldPrice, price);
-  const imageSrc = product.images?.[0] || product.image || "";
+  const imageList = product.images && product.images.length > 0 ? product.images : product.image ? [product.image] : [];
+  const primaryImage = imageList[0] || "";
+  const secondaryImage = imageList[1] || primaryImage;
   const href = `/product/${product.slug || product._id}`;
+  const inWishlist = isInWishlist(product._id);
   const defaultSize = product.sizes?.[0] || "";
   const defaultColor = product.colors?.[0]?.name || "";
   const outOfStock = typeof product.stock === "number" && product.stock <= 0;
-  const inWishlist = isInWishlist(product._id);
 
-  /* 3D tilt ---------------------------------------------------------- */
-  const rx = useMotionValue(0);
-  const ry = useMotionValue(0);
-  const sx = useSpring(rx, { stiffness: 200, damping: 20 });
-  const sy = useSpring(ry, { stiffness: 200, damping: 20 });
-  const glareX = useTransform(sx, [-12, 12], ["40%", "60%"]);
-  const glareY = useTransform(sy, [-12, 12], ["30%", "70%"]);
-  const glare = useTransform(
-    [glareX, glareY],
-    ([x, y]) =>
-      `radial-gradient(circle at ${x} ${y}, rgba(255,255,255,0.18), transparent 60%)`,
-  );
+  // Determine badge
+  let badgeText: string | null = null;
+  if (outOfStock) {
+    badgeText = "SOLD OUT";
+  } else if (oldPrice && oldPrice > price) {
+    badgeText = "SALE";
+  } else if (product.isNewArrival) {
+    badgeText = "NEW";
+  } else if (product.featured) {
+    badgeText = "BESTSELLER";
+  }
 
-  const handleMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const el = cardRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width - 0.5;
-      const py = (e.clientY - rect.top) / rect.height - 0.5;
-      ry.set(px * 14);
-      rx.set(-py * 14);
-    },
-    [rx, ry],
-  );
-
-  const handleLeave = useCallback(() => {
-    rx.set(0);
-    ry.set(0);
-  }, [rx, ry]);
-
-  /* actions ---------------------------------------------------------- */
-  const handleAddToCart = useCallback(
+  const handleQuickAdd = useCallback(
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (outOfStock) return;
-      const ok = await addItem(product._id, defaultSize, defaultColor, 1);
-      if (ok) {
-        setAdded(true);
-        addToast(`${product.name} added to cart`, "success");
-        setTimeout(() => setAdded(false), 1400);
+      if (outOfStock || quickAdding) return;
+
+      setQuickAdding(true);
+      const success = await addItem(product._id, defaultSize, defaultColor, 1);
+      setQuickAdding(false);
+
+      if (success) {
+        addToast(`${product.name} added to bag`, "success");
       } else {
-        addToast("Could not add to cart", "error");
+        addToast("Please choose your size on product page", "info");
       }
     },
-    [addItem, addToast, product._id, product.name, defaultSize, defaultColor, outOfStock],
+    [product, defaultSize, defaultColor, outOfStock, quickAdding, addItem, addToast]
   );
 
-  const handleWishlist = useCallback(
-    async (e: React.MouseEvent) => {
+  const handleWishlistToggle = useCallback(
+    (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const ok = await toggleWishlist(product._id, {
+      toggleWishlist(product._id, {
         name: product.name,
         price,
-        image: imageSrc,
+        image: primaryImage,
         slug: product.slug,
-        stock: product.stock,
       });
-      if (ok) {
-        addToast(
-          isInWishlist(product._id) ? "Removed from wishlist" : "Added to wishlist",
-          "success",
-        );
-      }
+      addToast(
+        inWishlist ? `Removed from wishlist` : `Added to wishlist`,
+        "info"
+      );
     },
-    [toggleWishlist, isInWishlist, product, price, imageSrc, addToast],
+    [product, price, primaryImage, inWishlist, toggleWishlist, addToast]
   );
 
-  const progressColor =
-    typeof product.stock === "number" && product.stock <= 10
-      ? "text-amber-400"
-      : "text-emerald-400";
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6, delay: (index % 4) * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative"
+    <div
+      className="group relative flex flex-col"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <div
-        ref={cardRef}
-        onMouseMove={handleMove}
-        onMouseLeave={handleLeave}
-        style={{ perspective: 1200 }}
-        className="relative"
-      >
-        <motion.div
-          style={{ rotateX: sx, rotateY: sy, transformStyle: "preserve-3d" }}
-          className="glass-card relative overflow-hidden transition-shadow duration-500 hover:shadow-[0_0_40px_-8px_rgba(124,58,237,0.55)]"
-        >
-          {/* Glare */}
-          <motion.div
-            className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{ background: glare }}
-          />
-
-          {/* Image */}
-          <Link href={href} className="relative block aspect-[4/5] overflow-hidden">
-            {imageSrc ? (
+      {/* Product Image Container */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md border border-[var(--color-border)]/60 bg-[var(--color-bg-muted)]">
+        <Link href={href} className="block h-full w-full" tabIndex={-1}>
+          {primaryImage ? (
+            <>
+              {/* Primary Image */}
               <Image
-                src={imageSrc}
+                src={primaryImage}
                 alt={product.name}
                 fill
-                priority={eager || index < 2}
-                sizes="(max-width: 768px) 50vw, 25vw"
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                priority={eager}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className={`object-cover object-center transition-all duration-500 ease-out group-hover:scale-[1.03] ${
+                  hovered && secondaryImage && secondaryImage !== primaryImage
+                    ? "opacity-0"
+                    : "opacity-100"
+                }`}
               />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/5 to-white/0">
-                <span className="text-xs text-[var(--color-text-muted)]">No image</span>
-              </div>
-            )}
 
-            {/* Top gradient */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent" />
+              {/* Secondary Image on Hover */}
+              {secondaryImage && secondaryImage !== primaryImage && (
+                <Image
+                  src={secondaryImage}
+                  alt={`${product.name} alternate angle`}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className={`object-cover object-center transition-all duration-500 ease-out group-hover:scale-[1.03] ${
+                    hovered ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              )}
+            </>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-[var(--color-text-muted)]">
+              No Image
+            </div>
+          )}
+        </Link>
 
-            {/* Discount badge */}
-            {discount && (
-              <div className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-primary)] px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
-                -{discount}%
-              </div>
-            )}
-
-            {/* Category tag */}
-            {product.category && (
-              <div className="absolute bottom-3 left-3 rounded-full border border-white/15 bg-black/40 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/80 backdrop-blur-sm">
-                {product.category}
-              </div>
-            )}
-
-            {outOfStock && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/55 backdrop-blur-[2px]">
-                <span className="rounded-full border border-white/20 bg-black/60 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
-                  Out of stock
-                </span>
-              </div>
-            )}
-          </Link>
-
-          {/* Wishlist button */}
-          <button
-            type="button"
-            onClick={handleWishlist}
-            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute right-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-black/60"
-          >
-            <motion.span
-              key={inWishlist ? "filled" : "outline"}
-              initial={{ scale: 0.4, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-              className="flex items-center justify-center"
+        {/* Subtle Badge */}
+        {badgeText && (
+          <div className="absolute left-2.5 top-2.5 pointer-events-none">
+            <span
+              className={`inline-block rounded-xs px-2 py-0.5 text-[9px] font-semibold tracking-[0.14em] uppercase backdrop-blur-xs ${
+                badgeText === "SALE"
+                  ? "bg-[var(--color-bg)]/90 text-[var(--color-error)] border border-[var(--color-border)]"
+                  : badgeText === "SOLD OUT"
+                  ? "bg-[var(--color-bg)]/90 text-[var(--color-text-muted)] border border-[var(--color-border)]"
+                  : "bg-[var(--color-bg)]/90 text-[var(--color-accent)] border border-[var(--color-border)]"
+              }`}
             >
-              <Heart
-                size={17}
-                fill={inWishlist ? "#ec4899" : "transparent"}
-                color={inWishlist ? "#ec4899" : "currentColor"}
-              />
-            </motion.span>
-          </button>
+              {badgeText}
+            </span>
+          </div>
+        )}
 
-          {/* Quick view overlay */}
-          <div
-            className={`pointer-events-none absolute inset-x-3 bottom-[4.5rem] z-10 flex justify-center transition-all duration-300 ${
-              quickView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-            }`}
-          >
+        {/* Wishlist Button (Top Right) */}
+        <button
+          type="button"
+          onClick={handleWishlistToggle}
+          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-bg)]/80 backdrop-blur-xs border border-[var(--color-border)]/60 text-[var(--color-text)] transition-transform hover:scale-110 active:scale-95"
+          aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart
+            size={15}
+            className={inWishlist ? "fill-[var(--color-accent)] text-[var(--color-accent)]" : "text-[var(--color-text)]"}
+          />
+        </button>
+
+        {/* Quick Add Bar (Slide-Up on Hover) */}
+        {!outOfStock && (
+          <div className="absolute inset-x-0 bottom-0 p-2.5 transition-all duration-300 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100">
             <button
               type="button"
-              onMouseEnter={() => setQuickView(true)}
-              onMouseLeave={() => setQuickView(false)}
-              onClick={(e) => {
-                e.preventDefault();
-                addToast("Quick view coming soon", "info");
-              }}
-              className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/20 bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md"
+              onClick={handleQuickAdd}
+              disabled={quickAdding}
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--color-bg)]/95 backdrop-blur-md border border-[var(--color-border)] text-xs font-medium tracking-wider uppercase text-[var(--color-text)] transition-colors hover:bg-[var(--color-accent)] hover:text-white hover:border-[var(--color-accent)] shadow-xs"
             >
-              <Eye size={14} />
-              Quick view
+              <ShoppingBag size={13} />
+              <span>{quickAdding ? "Adding..." : "Quick Add"}</span>
             </button>
           </div>
+        )}
+      </div>
 
-          {/* Info */}
-          <div className="flex flex-col gap-2 p-4">
-            <h3 className="line-clamp-2 text-sm font-medium leading-snug text-[var(--color-text)] transition-colors group-hover:text-[var(--color-primary-light)]">
-              <Link href={href}>{product.name}</Link>
-            </h3>
+      {/* Product Details Below Image */}
+      <div className="mt-3 flex flex-col space-y-1">
+        {/* Name */}
+        <Link href={href} className="group-hover:text-[var(--color-accent)] transition-colors">
+          <h3 className="font-serif text-sm font-medium leading-snug text-[var(--color-text)] truncate">
+            {product.name}
+          </h3>
+        </Link>
 
-            {/* Rating */}
-            {typeof product.rating === "number" && product.rating > 0 && (
-              <div className="flex items-center gap-2 text-xs">
-                <span className="flex items-center gap-0.5 text-amber-400">
-                  <Star size={12} fill="currentColor" />
-                  <span className="font-semibold text-[var(--color-text)]">
-                    {product.rating.toFixed(1)}
-                  </span>
-                </span>
-                <span className="text-[var(--color-text-muted)]">
-                  ({product.reviewCount ?? 0})
-                </span>
-              </div>
-            )}
+        {/* Category */}
+        <p className="text-xs text-[var(--color-text-muted)]">
+          {product.category
+            ? `${product.category.charAt(0) + product.category.slice(1).toLowerCase()}'s Collection`
+            : "Heritage Wear"}
+        </p>
 
-            <div className="flex items-baseline gap-2">
-              <span className="text-base font-bold text-[var(--color-text)]">
-                ₹{price.toLocaleString("en-IN")}
+        {/* Price & Colors */}
+        <div className="flex items-center justify-between pt-0.5">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-medium text-[var(--color-text)]">
+              ₹{price.toLocaleString("en-IN")}
+            </span>
+            {oldPrice && oldPrice > price && (
+              <span className="text-xs text-[var(--color-text-muted)] line-through">
+                ₹{oldPrice.toLocaleString("en-IN")}
               </span>
-              {oldPrice && oldPrice > price && (
-                <span className="text-sm text-[var(--color-text-muted)] line-through">
-                  ₹{oldPrice.toLocaleString("en-IN")}
+            )}
+          </div>
+
+          {/* Color Dots */}
+          {product.colors && product.colors.length > 0 && (
+            <div className="flex items-center gap-1" aria-label="Available colors">
+              {product.colors.slice(0, 3).map((col, cIdx) => (
+                <span
+                  key={cIdx}
+                  title={col.name}
+                  className="h-2 w-2 rounded-full border border-[var(--color-border)]"
+                  style={{ backgroundColor: col.hex || "#2D4A6B" }}
+                />
+              ))}
+              {product.colors.length > 3 && (
+                <span className="text-[9px] text-[var(--color-text-muted)]">
+                  +{product.colors.length - 3}
                 </span>
               )}
             </div>
-
-            {/* Stock / add to cart */}
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <span className={`text-[11px] font-medium ${progressColor}`}>
-                {typeof product.stock === "number" && product.stock > 0
-                  ? product.stock <= 10
-                    ? "Only few left"
-                    : "In stock"
-                  : outOfStock
-                    ? "Out of stock"
-                    : "In stock"}
-              </span>
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.9 }}
-                onClick={handleAddToCart}
-                disabled={outOfStock}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${
-                  outOfStock
-                    ? "cursor-not-allowed bg-white/5 text-[var(--color-text-muted)]"
-                    : added
-                      ? "bg-emerald-500/20 text-emerald-300"
-                      : "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white hover:shadow-lg hover:shadow-[var(--color-primary)]/40"
-                }`}
-              >
-                <ShoppingBag size={13} />
-                {added ? "Added" : "Add"}
-              </motion.button>
-            </div>
-          </div>
-
-          {/* Glow border on hover */}
-          <div className="pointer-events-none absolute inset-0 rounded-[1.25rem] opacity-0 transition-opacity duration-300 group-hover:opacity-100" style={{ boxShadow: "inset 0 0 0 1px rgba(167,139,250,0.4)" }} />
-        </motion.div>
+          )}
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

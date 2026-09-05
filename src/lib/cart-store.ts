@@ -82,6 +82,9 @@ interface CartState {
   items: CartItem[];
   loading: boolean;
   totalItems: number;
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
   setItems: (items: CartItem[]) => void;
   fetchCart: () => Promise<void>;
   addItem: (
@@ -108,6 +111,10 @@ export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   loading: false,
   totalItems: 0,
+  isDrawerOpen: false,
+
+  openDrawer: () => set({ isDrawerOpen: true }),
+  closeDrawer: () => set({ isDrawerOpen: false }),
 
   setItems: (items) =>
     set({ items, totalItems: deriveTotalItems(items) }),
@@ -149,7 +156,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       const data = (await res.json()) as { cart?: unknown };
       const items = mapCartItems(data?.cart);
-      set({ items, totalItems: deriveTotalItems(items) });
+      set({ items, totalItems: deriveTotalItems(items), isDrawerOpen: true });
       return true;
     } catch {
       return false;

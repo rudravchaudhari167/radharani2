@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useAuthStore } from "@/lib/store";
 import { useCartStore } from "@/lib/cart-store";
 import { useWishlistStore } from "@/lib/wishlist-store";
+import { ToastProvider } from "@/components/ui/Toast";
 
 export function Providers({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
@@ -37,5 +38,5 @@ export function Providers({ children }: { children: ReactNode }) {
     setWishlistItems,
   ]);
 
-  return <>{children}</>;
+  return <ToastProvider>{children}</ToastProvider>;
 }

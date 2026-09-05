@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -13,6 +13,7 @@ import {
   Phone,
   Sparkles,
   User as UserIcon,
+  LoaderCircle,
 } from "lucide-react";
 import { useAuthStore, type User } from "@/lib/store";
 import { useCartStore } from "@/lib/cart-store";
@@ -20,146 +21,6 @@ import { useWishlistStore } from "@/lib/wishlist-store";
 import { useToastStore } from "@/lib/toast-store";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function normalizeUser(raw: unknown): User | null {
-  if (!raw || typeof raw !== "object") return null;
-  const u = raw as Record<string, unknown>;
-  if (typeof u.name !== "string" || typeof u.email !== "string") return null;
-  return {
-    id: String(u._id ?? u.userId ?? u.id ?? u.email),
-    name: u.name,
-    email: u.email,
-    phone: typeof u.phone === "string" ? u.phone : "",
-    role: u.role === "ADMIN" ? "ADMIN" : "USER",
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* Brand panel                                                         */
-/* ------------------------------------------------------------------ */
-
-function BrandPanel({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex lg:w-[44%]">
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-secondary)] via-[var(--color-accent)] to-[var(--color-primary)]" />
-      <div
-        className="absolute inset-0 opacity-40"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.28) 1px, transparent 0)",
-          backgroundSize: "34px 34px",
-        }}
-      />
-      <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-black/25 blur-3xl" />
-
-      <span
-        className="animate-petal-fall pointer-events-none absolute right-10 top-28 h-6 w-6 rounded-full opacity-70"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #c4b5fd, #8b5cf6 60%, #6d28d9)",
-          animationDuration: "12s",
-        }}
-      />
-      <span
-        className="animate-petal-fall pointer-events-none absolute left-1/2 top-4 h-4 w-4 rounded-full opacity-60"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #fecdd3, #f472b6 60%, #db2777)",
-          animationDelay: "2.6s",
-          animationDuration: "14s",
-        }}
-      />
-      <span
-        className="animate-petal-fall pointer-events-none absolute left-40 top-44 h-7 w-7 rounded-full opacity-50"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #f9a8d4, #ec4899 60%, #be185d)",
-          animationDelay: "5s",
-          animationDuration: "16s",
-        }}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="relative z-10"
-      >
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/25 bg-white/15 backdrop-blur-sm">
-          <Sparkles size={22} className="text-white" />
-        </span>
-        <h2
-          className="mt-6 bg-clip-text text-2xl font-black tracking-[0.3em] text-transparent"
-          style={{ backgroundImage: "linear-gradient(135deg,#fff,#f5d0fe)" }}
-        >
-          Radha Rani
-        </h2>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.15 }}
-        className="relative z-10 max-w-md"
-      >
-        <h1 className="text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
-          {title}
-        </h1>
-        <p className="mt-5 text-base font-light leading-relaxed text-white/85">
-          {subtitle}
-        </p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-        className="relative z-10"
-      >
-        <p className="mb-4 text-sm font-semibold italic text-white/80">
-          &ldquo;Divine Style. Eternal Bond.&rdquo;
-        </p>
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-        >
-          Already have an account?
-          <ArrowRight size={16} />
-        </Link>
-      </motion.div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Inputs and helpers                                                  */
-/* ------------------------------------------------------------------ */
-
-function LoaderIcon() {
-  return (
-    <svg
-      className="h-4 w-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-      />
-    </svg>
-  );
-}
 
 function GoogleIcon() {
   return (
@@ -184,150 +45,71 @@ function GoogleIcon() {
   );
 }
 
-interface InputFieldProps {
-  type?: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  icon: React.ReactNode;
-  autoComplete?: string;
-  error?: string;
+function normalizeUser(raw: unknown): User | null {
+  if (!raw || typeof raw !== "object") return null;
+  const u = raw as Record<string, unknown>;
+  if (typeof u.name !== "string" || typeof u.email !== "string") return null;
+  return {
+    id: String(u._id ?? u.userId ?? u.id ?? u.email),
+    name: u.name,
+    email: u.email,
+    phone: typeof u.phone === "string" ? u.phone : "",
+    role: u.role === "ADMIN" ? "ADMIN" : "USER",
+  };
 }
 
-function InputField({
-  type = "text",
-  label,
-  value,
-  onChange,
-  placeholder,
-  icon,
-  autoComplete,
-  error,
-}: InputFieldProps) {
-  const [visible, setVisible] = useState(false);
-  const isPassword = type === "password";
-  const inputType = isPassword ? (visible ? "text" : "password") : type;
-
+function BrandPanel({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-        {label}
-      </label>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
-          {icon}
-        </span>
-        <input
-          type={inputType}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          aria-invalid={Boolean(error)}
-          className={`w-full rounded-xl border bg-white/5 py-3 pl-11 pr-11 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 ${
-            error
-              ? "border-[var(--color-secondary)]/60 focus:border-[var(--color-secondary)] focus:ring-[var(--color-secondary)]/40"
-              : "border-[var(--color-border)] focus:border-[var(--color-primary-light)] focus:ring-[var(--color-primary-light)]/40"
-          }`}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
-          >
-            {visible ? <EyeOff size={17} /> : <Eye size={17} />}
-          </button>
-        )}
+    <div className="relative hidden flex-col justify-between overflow-hidden bg-[#1A2530] p-12 lg:flex lg:w-[44%] text-white">
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#2D4A6B]/30 blur-3xl" />
+
+      <div className="relative z-10">
+        <Link href="/" className="inline-block">
+          <span className="font-serif text-2xl font-normal tracking-[0.3em] text-white">
+            VRINDAV
+          </span>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#B8965A]">
+            Atelier de Dévotion
+          </p>
+        </Link>
       </div>
-      {error && (
-        <p className="mt-1.5 text-xs text-[var(--color-secondary)]">{error}</p>
-      )}
-    </div>
-  );
-}
 
-/* ------------------------------------------------------------------ */
-/* Password strength                                                   */
-/* ------------------------------------------------------------------ */
-
-type Strength = "weak" | "medium" | "strong";
-
-function passwordStrength(pw: string): Strength {
-  if (!pw) return "weak";
-  let score = 0;
-  if (pw.length >= 8) score += 1;
-  if (pw.length >= 12) score += 1;
-  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score += 1;
-  if (/\d/.test(pw)) score += 1;
-  if (/[^A-Za-z0-9]/.test(pw)) score += 1;
-  if (score >= 4) return "strong";
-  if (score >= 2) return "medium";
-  return "weak";
-}
-
-const STRENGTH_META: Record<
-  Strength,
-  { label: string; color: string; bar: string; width: string }
-> = {
-  weak: {
-    label: "Weak",
-    color: "text-[var(--color-secondary)]",
-    bar: "bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary)]",
-    width: "33.33%",
-  },
-  medium: {
-    label: "Medium",
-    color: "text-amber-400",
-    bar: "bg-gradient-to-r from-amber-500 to-orange-400",
-    width: "66.66%",
-  },
-  strong: {
-    label: "Strong",
-    color: "text-emerald-400",
-    bar: "bg-gradient-to-r from-emerald-500 to-green-400",
-    width: "100%",
-  },
-};
-
-function StrengthIndicator({ password, confirm }: { password: string; confirm: string }) {
-  const strength = useMemo(() => passwordStrength(password), [password]);
-  const meta = STRENGTH_META[strength];
-  const isMatch = password.length > 0 && confirm.length > 0 && password === confirm;
-
-  return (
-    <div className="mt-2">
-      {password.length > 0 && (
-        <div className="flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: meta.width }}
-              transition={{ duration: 0.3 }}
-              className={`h-full rounded-full ${meta.bar}`}
-            />
-          </div>
-          <span className={`text-[11px] font-bold ${meta.color}`}>{meta.label}</span>
-        </div>
-      )}
-      {confirm.length > 0 && password.length > 0 && (
-        <p
-          className={`mt-1.5 text-[11px] ${
-            isMatch ? "text-emerald-400" : "text-[var(--color-secondary)]"
-          }`}
-        >
-          {isMatch ? "Passwords match" : "Passwords don&apos;t match yet"}
+      <div className="relative z-10 max-w-sm">
+        <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#FAF9F6]">
+          <Sparkles size={12} className="text-[#B8965A]" />
+          Privileged Membership
+        </span>
+        <h1 className="font-serif text-3xl font-light leading-snug tracking-tight text-white sm:text-4xl">
+          {title}
+        </h1>
+        <p className="mt-4 text-xs font-light leading-relaxed text-white/75">
+          {subtitle}
         </p>
-      )}
+      </div>
+
+      <div className="relative z-10 border-t border-white/10 pt-6">
+        <p className="font-serif italic text-xs text-white/70">
+          &ldquo;Divine Style. Eternal Bond.&rdquo;
+        </p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#B8965A] hover:underline"
+        >
+          Already registered? Sign in
+          <ArrowRight size={13} />
+        </Link>
+      </div>
     </div>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -342,6 +124,7 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -366,7 +149,7 @@ export default function RegisterPage() {
       if (!trimmedEmail) {
         errors.email = "Email is required";
       } else if (!EMAIL_REGEX.test(trimmedEmail)) {
-        errors.email = "Please enter a valid email";
+        errors.email = "Please enter a valid email address";
       }
 
       const digits = phone.replace(/\D/g, "");
@@ -383,7 +166,7 @@ export default function RegisterPage() {
       }
 
       if (!confirm) {
-        errors.confirm = "Confirm your password";
+        errors.confirm = "Please confirm your password";
       } else if (confirm !== password) {
         errors.confirm = "Passwords do not match";
       }
@@ -422,13 +205,11 @@ export default function RegisterPage() {
 
         setUser(normalizeUser(data.user));
         await Promise.all([fetchCart(), fetchWishlist()]);
-        addToast("Account created successfully", "success");
+        addToast("Welcome to VRINDAV", "success");
         router.push("/account");
         router.refresh();
       } catch {
-        setFormError(
-          "Network error. Please check your connection and try again.",
-        );
+        setFormError("Network error. Please check your connection and try again.");
       } finally {
         setLoading(false);
       }
@@ -458,188 +239,233 @@ export default function RegisterPage() {
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !data.url) {
-        setFormError(data.error || "Could not start Google sign-up");
+        setFormError(data.error || "Could not start Google registration");
         return;
       }
       window.location.href = data.url;
     } catch {
-      setFormError("Could not start Google sign-up. Please try again.");
+      setFormError("Could not start Google registration. Please try again.");
     } finally {
       setOauthLoading(false);
     }
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-[#FAF9F6]">
       {/* Brand panel */}
       <BrandPanel
-        title="Join the Radha Rani family"
-        subtitle="Create your account to discover divine-inspired fashion, save your favourites and feel the eternal bond in every thread."
+        title="Begin your journey into divine sartorial elegance"
+        subtitle="Create an account to preserve favorite garments, track bespoke orders, and enjoy tailored client services."
       />
 
       {/* Form panel */}
       <div className="relative flex w-full items-center justify-center px-4 py-16 sm:px-8 lg:w-[56%]">
         <div className="w-full max-w-md">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="glass-card p-8 sm:p-10"
+            transition={{ duration: 0.5 }}
+            className="rounded-sm border border-[#E7E3DC] bg-white p-8 sm:p-10 shadow-sm"
           >
-            <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-[var(--color-primary-light)]">
-              <UserIcon size={13} />
-              Create account
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#2D4A6B]">
+              Membership Registration
             </p>
-            <h1 className="text-3xl font-black tracking-tight text-[var(--color-text)]">
-              Join Radha Rani
+            <h1 className="mt-2 font-serif text-2xl font-light text-[#171717] sm:text-3xl">
+              Create Your Account
             </h1>
-            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-              Fill in your details to begin your journey.
+            <p className="mt-1 text-xs text-[#666666]">
+              Enter your details to create your private VRINDAV profile.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4 noValidate">
-              <InputField
-                label="Full Name"
-                value={name}
-                onChange={setName}
-                placeholder="Radha Sharma"
-                autoComplete="name"
-                icon={<UserIcon size={17} />}
-                error={fieldErrors.name}
-              />
-
-              <InputField
-                type="email"
-                label="Email"
-                value={email}
-                onChange={setEmail}
-                placeholder="you@example.com"
-                autoComplete="email"
-                icon={<Mail size={17} />}
-                error={fieldErrors.email}
-              />
-
-              {/* Phone */}
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                  Phone Number
+                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                  Full Name
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--color-text-muted)]">
+                  <UserIcon
+                    size={15}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                  />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Radhika Sharma"
+                    autoComplete="name"
+                    className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
+                  />
+                </div>
+                {fieldErrors.name && (
+                  <p className="mt-1 text-[11px] text-red-600">
+                    {fieldErrors.name}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail
+                    size={15}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                  />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@domain.com"
+                    autoComplete="email"
+                    className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
+                  />
+                </div>
+                {fieldErrors.email && (
+                  <p className="mt-1 text-[11px] text-red-600">
+                    {fieldErrors.email}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#666666]">
                     +91
                   </span>
-                  <Phone
-                    size={17}
-                    className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
-                  />
                   <input
                     type="tel"
                     inputMode="numeric"
                     value={phone}
                     onChange={(e) =>
-                      setPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 10))
+                      setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
                     }
                     placeholder="98765 43210"
                     autoComplete="tel"
-                    aria-invalid={Boolean(fieldErrors.phone)}
-                    className={`w-full rounded-xl border bg-white/5 py-3 pl-14 pr-12 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 ${
-                      fieldErrors.phone
-                        ? "border-[var(--color-secondary)]/60 focus:border-[var(--color-secondary)] focus:ring-[var(--color-secondary)]/40"
-                        : "border-[var(--color-border)] focus:border-[var(--color-primary-light)] focus:ring-[var(--color-primary-light)]/40"
-                    }`}
+                    className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-12 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
                   />
                 </div>
                 {fieldErrors.phone && (
-                  <p className="mt-1.5 text-xs text-[var(--color-secondary)]">
+                  <p className="mt-1 text-[11px] text-red-600">
                     {fieldErrors.phone}
                   </p>
                 )}
               </div>
 
-              {/* Password */}
               <div>
-                <InputField
-                  type="password"
-                  label="Password"
-                  value={password}
-                  onChange={setPassword}
-                  placeholder="Min. 8 characters"
-                  autoComplete="new-password"
-                  icon={<Lock size={17} />}
-                  error={fieldErrors.password}
-                />
-                <StrengthIndicator password={password} confirm={confirm} />
+                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                  Password (min. 8 characters)
+                </label>
+                <div className="relative">
+                  <Lock
+                    size={15}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                  />
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-10 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPasswordVisible((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999999] hover:text-[#171717]"
+                  >
+                    {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+                {fieldErrors.password && (
+                  <p className="mt-1 text-[11px] text-red-600">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
-              <InputField
-                type="password"
-                label="Confirm Password"
-                value={confirm}
-                onChange={setConfirm}
-                placeholder="Re-enter your password"
-                autoComplete="new-password"
-                icon={<Lock size={17} />}
-                error={fieldErrors.confirm}
-              />
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock
+                    size={15}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                  />
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
+                  />
+                </div>
+                {fieldErrors.confirm && (
+                  <p className="mt-1 text-[11px] text-red-600">
+                    {fieldErrors.confirm}
+                  </p>
+                )}
+              </div>
 
               {formError && (
-                <motion.p
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl border border-[var(--color-secondary)]/30 bg-[var(--color-secondary)]/10 px-4 py-3 text-sm text-[var(--color-secondary)]"
-                >
+                <p className="rounded border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
                   {formError}
-                </motion.p>
+                </p>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="btn btn-primary h-12 w-full rounded-2xl text-base font-bold disabled:opacity-70"
+                className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 bg-[#171717] px-6 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#2D4A6B] disabled:opacity-60"
               >
                 {loading ? (
                   <>
-                    <LoaderIcon />
-                    Creating account…
+                    <LoaderCircle size={15} className="animate-spin" />
+                    Creating Profile…
                   </>
                 ) : (
                   <>
-                    Create account
-                    <ArrowRight size={17} />
+                    Create Account
+                    <ArrowRight size={14} />
                   </>
                 )}
               </button>
 
-              <div className="flex items-center gap-3">
-                <span className="h-px flex-1 bg-[var(--color-border)]" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">
-                  or continue with
+              <div className="my-4 flex items-center gap-3">
+                <span className="h-px flex-1 bg-[#E7E3DC]" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#999999]">
+                  or
                 </span>
-                <span className="h-px flex-1 bg-[var(--color-border)]" />
+                <span className="h-px flex-1 bg-[#E7E3DC]" />
               </div>
 
               <button
                 type="button"
                 onClick={handleGoogleSignup}
                 disabled={oauthLoading}
-                className="flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl border border-[var(--color-border)] bg-white/5 text-sm font-bold text-[var(--color-text)] transition-colors hover:border-[var(--color-primary-light)]/50 hover:bg-white/10 disabled:opacity-60"
+                className="flex h-11 w-full items-center justify-center gap-2.5 rounded-sm border border-[#E7E3DC] bg-white text-xs font-semibold uppercase tracking-wider text-[#171717] transition-colors hover:border-[#171717] disabled:opacity-60"
               >
                 {oauthLoading ? (
-                  <LoaderIcon />
+                  <LoaderCircle size={16} className="animate-spin" />
                 ) : (
                   <GoogleIcon />
                 )}
-                {oauthLoading ? "Connecting…" : "Continue with Google"}
+                {oauthLoading ? "Connecting…" : "Sign up with Google"}
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
+            <p className="mt-6 text-center text-xs text-[#666666]">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-semibold text-[var(--color-primary-light)] transition-colors hover:text-[var(--color-secondary)]"
+                className="font-semibold text-[#171717] underline hover:text-[#2D4A6B]"
               >
-                Login
+                Sign In
               </Link>
             </p>
           </motion.div>

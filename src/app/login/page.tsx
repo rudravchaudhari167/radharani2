@@ -9,7 +9,6 @@ import {
   Eye,
   EyeOff,
   Lock,
-  LogIn,
   LoaderCircle,
   Mail,
   Phone,
@@ -60,217 +59,76 @@ function normalizeUser(raw: unknown): User | null {
   };
 }
 
-/* ------------------------------------------------------------------ */
-/* Brand panel                                                         */
-/* ------------------------------------------------------------------ */
-
 function BrandPanel({
   title,
   subtitle,
-  cta,
 }: {
   title: string;
   subtitle: string;
-  cta: { label: string; href: string };
 }) {
   return (
-    <div className="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex lg:w-[44%]">
-      {/* Gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-accent)] to-[var(--color-secondary)]" />
-      {/* Pattern overlay */}
+    <div className="relative hidden flex-col justify-between overflow-hidden bg-[#1A2530] p-12 lg:flex lg:w-[44%] text-white">
+      {/* Subtle texture overlay */}
       <div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-10"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.28) 1px, transparent 0)",
-          backgroundSize: "34px 34px",
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
+          backgroundSize: "28px 28px",
         }}
       />
-      <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-black/25 blur-3xl" />
+      {/* Glow orb */}
+      <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#2D4A6B]/30 blur-3xl" />
 
-      {/* Falling petals */}
-      <span
-        className="animate-petal-fall pointer-events-none absolute left-10 top-24 h-6 w-6 rounded-full opacity-70"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #f9a8d4, #ec4899 60%, #be185d)",
-          animationDuration: "11s",
-        }}
-      />
-      <span
-        className="animate-petal-fall pointer-events-none absolute left-1/2 top-6 h-4 w-4 rounded-full opacity-60"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #c4b5fd, #8b5cf6 60%, #6d28d9)",
-          animationDelay: "2.2s",
-          animationDuration: "13s",
-        }}
-      />
-      <span
-        className="animate-petal-fall pointer-events-none absolute left-44 right-0 top-40 h-7 w-7 rounded-full opacity-50"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #fecdd3, #f472b6 60%, #db2777)",
-          animationDelay: "4.5s",
-          animationDuration: "15s",
-        }}
-      />
+      {/* Top Brand */}
+      <div className="relative z-10">
+        <Link href="/" className="inline-block">
+          <span className="font-serif text-2xl font-normal tracking-[0.3em] text-white">
+            VRINDAV
+          </span>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#B8965A]">
+            Atelier de Dévotion
+          </p>
+        </Link>
+      </div>
 
-      {/* Top */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="relative z-10"
-      >
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/25 bg-white/15 backdrop-blur-sm">
-          <Sparkles size={22} className="text-white" />
+      {/* Middle Copy */}
+      <div className="relative z-10 max-w-sm">
+        <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#FAF9F6]">
+          <Sparkles size={12} className="text-[#B8965A]" />
+          Client Portal
         </span>
-        <h2
-          className="mt-6 bg-clip-text text-2xl font-black tracking-[0.3em] text-transparent"
-          style={{ backgroundImage: "linear-gradient(135deg,#fff,#f5d0fe)" }}
-        >
-          Radha Rani
-        </h2>
-      </motion.div>
-
-      {/* Middle */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.15 }}
-        className="relative z-10 max-w-md"
-      >
-        <h1 className="text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
+        <h1 className="font-serif text-3xl font-light leading-snug tracking-tight text-white sm:text-4xl">
           {title}
         </h1>
-        <p className="mt-5 text-base font-light leading-relaxed text-white/85">
+        <p className="mt-4 text-xs font-light leading-relaxed text-white/75">
           {subtitle}
         </p>
-      </motion.div>
+      </div>
 
-      {/* Bottom */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-        className="relative z-10"
-      >
-        <p className="mb-4 text-sm font-semibold italic text-white/80">
+      {/* Bottom Quote */}
+      <div className="relative z-10 border-t border-white/10 pt-6">
+        <p className="font-serif italic text-xs text-white/70">
           &ldquo;Divine Style. Eternal Bond.&rdquo;
         </p>
         <Link
-          href={cta.href}
-          className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          href="/register"
+          className="mt-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#B8965A] hover:underline"
         >
-          {cta.label}
-          <ArrowRight size={16} />
+          Create an account
+          <ArrowRight size={13} />
         </Link>
-      </motion.div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Field                                                               */
-/* ------------------------------------------------------------------ */
-
-function Field({
-  type,
-  label,
-  value,
-  onChange,
-  placeholder,
-  icon,
-  autoComplete,
-  error,
-}: {
-  type: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  icon: React.ReactNode;
-  autoComplete?: string;
-  error?: string;
-}) {
-  const [visible, setVisible] = useState(false);
-  const isPassword = type === "password";
-  const inputType = isPassword ? (visible ? "text" : "password") : type;
-
-  return (
-    <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-        {label}
-      </label>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
-          {icon}
-        </span>
-        <input
-          type={inputType}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          aria-invalid={Boolean(error)}
-          className={`w-full rounded-xl border bg-white/5 py-3 pl-11 pr-11 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 ${
-            error
-              ? "border-[var(--color-secondary)]/60 focus:border-[var(--color-secondary)] focus:ring-[var(--color-secondary)]/40"
-              : "border-[var(--color-border)] focus:border-[var(--color-primary-light)] focus:ring-[var(--color-primary-light)]/40"
-          }`}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
-          >
-            {visible ? <EyeOff size={17} /> : <Eye size={17} />}
-          </button>
-        )}
       </div>
-      {error && <p className="mt-1.5 text-xs text-[var(--color-secondary)]">{error}</p>}
     </div>
   );
 }
-
-function LoaderIcon() {
-  return (
-    <svg
-      className="h-4 w-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-      />
-    </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
 
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const addToast = useToastStore((s) => s.addToast);
+  const redirectTo = searchParams.get("redirect") || "";
 
+  const addToast = useToastStore((s) => s.addToast);
   const setUser = useAuthStore((s) => s.setUser);
   const fetchCart = useCartStore((s) => s.fetchCart);
   const fetchWishlist = useWishlistStore((s) => s.fetchWishlist);
@@ -280,21 +138,11 @@ function LoginPageContent() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
-
-  const redirectTo = searchParams.get("redirect");
-
-  const oauthError = searchParams.get("error");
-  if (oauthError && !formError) {
-    setFormError(decodeURIComponent(oauthError));
-    // Replace URL to avoid re-triggering on refresh.
-    const clean = new URLSearchParams(searchParams.toString());
-    clean.delete("error");
-    window.history.replaceState({}, "", `${window.location.pathname}?${clean.toString()}`);
-  }
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -307,14 +155,14 @@ function LoginPageContent() {
         if (!email.trim()) {
           errors.email = "Email is required";
         } else if (!EMAIL_REGEX.test(email.trim())) {
-          errors.email = "Please enter a valid email";
+          errors.email = "Please enter a valid email address";
         }
       } else {
         const digits = phone.replace(/\D/g, "");
         if (!phone.trim()) {
           errors.phone = "Phone number is required";
         } else if (!/^[6-9]\d{9}$/.test(digits)) {
-          errors.phone = "Enter a valid 10-digit Indian phone number";
+          errors.phone = "Enter a valid 10-digit Indian mobile number";
         }
       }
       if (!password) {
@@ -347,23 +195,21 @@ function LoginPageContent() {
         };
 
         if (!res.ok) {
-          setFormError(data.error || "Could not log in. Please try again.");
+          setFormError(data.error || "Could not sign in. Please verify credentials.");
           if (data.fields) setFieldErrors(data.fields);
           return;
         }
 
         setUser(normalizeUser(data.user));
         await Promise.all([fetchCart(), fetchWishlist()]);
-        addToast("Welcome back to Radha Rani", "success");
+        addToast("Welcome back to VRINDAV", "success");
 
         const target =
           redirectTo && redirectTo.startsWith("/") ? redirectTo : "/account";
         router.push(target);
         router.refresh();
       } catch {
-        setFormError(
-          "Network error. Please check your connection and try again.",
-        );
+        setFormError("Network error. Please check your connection and try again.");
       } finally {
         setLoading(false);
       }
@@ -405,36 +251,34 @@ function LoginPageContent() {
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-[#FAF9F6]">
       {/* Brand panel */}
       <BrandPanel
-        title="Welcome back to your divine wardrobe"
-        subtitle="Sign in to unlock your saved styles, track orders and continue your journey with Radha Rani."
-        cta={{ label: "Create account", href: "/register" }}
+        title="Welcome back to your curated sanctuary"
+        subtitle="Sign in to access your saved styles, track orders, and manage bespoke requests."
       />
 
       {/* Form panel */}
       <div className="relative flex w-full items-center justify-center px-4 py-16 sm:px-8 lg:w-[56%]">
         <div className="w-full max-w-md">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="glass-card p-8 sm:p-10"
+            transition={{ duration: 0.5 }}
+            className="rounded-sm border border-[#E7E3DC] bg-white p-8 sm:p-10 shadow-sm"
           >
-            <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-[var(--color-primary-light)]">
-              <LogIn size={13} />
-              Welcome
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#2D4A6B]">
+              Sign In
             </p>
-            <h1 className="text-3xl font-black tracking-tight text-[var(--color-text)]">
-              Log in to Radha Rani
+            <h1 className="mt-2 font-serif text-2xl font-light text-[#171717] sm:text-3xl">
+              Log in to VRINDAV
             </h1>
-            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-              Enter your credentials to continue your journey.
+            <p className="mt-1 text-xs text-[#666666]">
+              Enter your registered email or phone to proceed.
             </p>
 
             {/* Mode toggle */}
-            <div className="mt-6 grid grid-cols-2 gap-1 rounded-xl border border-[var(--color-border)] bg-white/5 p-1">
+            <div className="mt-6 grid grid-cols-2 gap-1 rounded-sm border border-[#E7E3DC] bg-[#FAF9F6] p-1">
               {(["email", "phone"] as LoginMode[]).map((m) => {
                 const active = mode === m;
                 return (
@@ -442,71 +286,68 @@ function LoginPageContent() {
                     key={m}
                     type="button"
                     onClick={() => setMode(m)}
-                    aria-pressed={active}
-                    className={`relative flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-                      active ? "text-white" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    className={`flex items-center justify-center gap-1.5 rounded-sm py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                      active
+                        ? "bg-[#171717] text-white"
+                        : "text-[#666666] hover:text-[#171717]"
                     }`}
                   >
-                    {active && (
-                      <motion.span
-                        layoutId="login-mode-pill"
-                        className="absolute inset-0 rounded-lg bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)]"
-                        transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                      />
-                    )}
-                    <span className="relative z-10 flex items-center gap-1.5">
-                      {m === "email" ? <Mail size={15} /> : <Phone size={15} />}
-                      {m === "email" ? "EMAIL" : "PHONE"}
-                    </span>
+                    {m === "email" ? <Mail size={13} /> : <Phone size={13} />}
+                    {m}
                   </button>
                 );
               })}
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-5 noValidate">
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               {mode === "email" ? (
-                <Field
-                  type="email"
-                  label="Email"
-                  value={email}
-                  onChange={setEmail}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  icon={<Mail size={17} />}
-                  error={fieldErrors.email}
-                />
-              ) : (
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                    Phone Number
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                    Email Address
                   </label>
                   <div className="relative">
-                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--color-text-muted)]">
+                    <Mail
+                      size={15}
+                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@domain.com"
+                      autoComplete="email"
+                      className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
+                    />
+                  </div>
+                  {fieldErrors.email && (
+                    <p className="mt-1 text-[11px] text-red-600">
+                      {fieldErrors.email}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                    Mobile Number
+                  </label>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#666666]">
                       +91
                     </span>
-                    <Phone
-                      size={17}
-                      className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
-                    />
                     <input
                       type="tel"
                       inputMode="numeric"
                       value={phone}
                       onChange={(e) =>
-                        setPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 10))
+                        setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
                       }
                       placeholder="98765 43210"
                       autoComplete="tel"
-                      aria-invalid={Boolean(fieldErrors.phone)}
-                      className={`w-full rounded-xl border bg-white/5 py-3 pl-14 pr-12 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 ${
-                        fieldErrors.phone
-                          ? "border-[var(--color-secondary)]/60 focus:border-[var(--color-secondary)] focus:ring-[var(--color-secondary)]/40"
-                          : "border-[var(--color-border)] focus:border-[var(--color-primary-light)] focus:ring-[var(--color-primary-light)]/40"
-                      }`}
+                      className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-12 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
                     />
                   </div>
                   {fieldErrors.phone && (
-                    <p className="mt-1.5 text-xs text-[var(--color-secondary)]">
+                    <p className="mt-1 text-[11px] text-red-600">
                       {fieldErrors.phone}
                     </p>
                   )}
@@ -516,93 +357,85 @@ function LoginPageContent() {
               {/* Password */}
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
                     Password
-                  </span>
+                  </label>
                   <Link
                     href="/forgot-password"
-                    className="text-xs font-semibold text-[var(--color-primary-light)] transition-colors hover:text-[var(--color-secondary)]"
+                    className="text-[11px] text-[#2D4A6B] hover:underline"
                   >
-                    Forgot password?
+                    Forgot?
                   </Link>
                 </div>
-                <div className="relative mt-1.5">
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
-                    <Lock size={17} />
-                  </span>
+                <div className="relative">
+                  <Lock
+                    size={15}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                  />
                   <input
                     type={passwordVisible ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     autoComplete="current-password"
-                    aria-invalid={Boolean(fieldErrors.password)}
-                    className={`w-full rounded-xl border bg-white/5 py-3 pl-11 pr-11 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 ${
-                      fieldErrors.password
-                        ? "border-[var(--color-secondary)]/60 focus:border-[var(--color-secondary)] focus:ring-[var(--color-secondary)]/40"
-                        : "border-[var(--color-border)] focus:border-[var(--color-primary-light)] focus:ring-[var(--color-primary-light)]/40"
-                    }`}
+                    className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-10 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setPasswordVisible((v) => !v)}
                     aria-label={passwordVisible ? "Hide password" : "Show password"}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999999] hover:text-[#171717]"
                   >
-                    {passwordVisible ? <EyeOff size={17} /> : <Eye size={17} />}
+                    {passwordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
                 {fieldErrors.password && (
-                  <p className="mt-1.5 text-xs text-[var(--color-secondary)]">
+                  <p className="mt-1 text-[11px] text-red-600">
                     {fieldErrors.password}
                   </p>
                 )}
               </div>
 
               {formError && (
-                <motion.p
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl border border-[var(--color-secondary)]/30 bg-[var(--color-secondary)]/10 px-4 py-3 text-sm text-[var(--color-secondary)]"
-                >
+                <p className="rounded border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
                   {formError}
-                </motion.p>
+                </p>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="btn btn-primary h-12 w-full rounded-2xl text-base font-bold disabled:opacity-70"
+                className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 bg-[#171717] px-6 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#2D4A6B] disabled:opacity-60"
               >
                 {loading ? (
                   <>
-                    <LoaderIcon />
+                    <LoaderCircle size={15} className="animate-spin" />
                     Signing in…
                   </>
                 ) : (
                   <>
-                    Log in
-                    <ArrowRight size={17} />
+                    Sign In
+                    <ArrowRight size={14} />
                   </>
                 )}
               </button>
 
-              <div className="flex items-center gap-3">
-                <span className="h-px flex-1 bg-[var(--color-border)]" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">
-                  or continue with
+              <div className="my-4 flex items-center gap-3">
+                <span className="h-px flex-1 bg-[#E7E3DC]" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#999999]">
+                  or
                 </span>
-                <span className="h-px flex-1 bg-[var(--color-border)]" />
+                <span className="h-px flex-1 bg-[#E7E3DC]" />
               </div>
 
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={oauthLoading}
-                className="flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl border border-[var(--color-border)] bg-white/5 text-sm font-bold text-[var(--color-text)] transition-colors hover:border-[var(--color-primary-light)]/50 hover:bg-white/10 disabled:opacity-60"
+                className="flex h-11 w-full items-center justify-center gap-2.5 rounded-sm border border-[#E7E3DC] bg-white text-xs font-semibold uppercase tracking-wider text-[#171717] transition-colors hover:border-[#171717] disabled:opacity-60"
               >
                 {oauthLoading ? (
-                  <LoaderCircle size={18} className="animate-spin" />
+                  <LoaderCircle size={16} className="animate-spin" />
                 ) : (
                   <GoogleIcon />
                 )}
@@ -610,13 +443,13 @@ function LoginPageContent() {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
-              Don&apos;t have an account?{" "}
+            <p className="mt-6 text-center text-xs text-[#666666]">
+              New to VRINDAV?{" "}
               <Link
                 href="/register"
-                className="font-semibold text-[var(--color-primary-light)] transition-colors hover:text-[var(--color-secondary)]"
+                className="font-semibold text-[#171717] underline hover:text-[#2D4A6B]"
               >
-                Register
+                Create an account
               </Link>
             </p>
           </motion.div>
@@ -631,7 +464,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen w-full items-center justify-center">
-          <div className="skeleton h-24 w-24 rounded-2xl" />
+          <LoaderCircle size={32} className="animate-spin text-[#2D4A6B]" />
         </div>
       }
     >

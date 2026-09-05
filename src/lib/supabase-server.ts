@@ -50,6 +50,7 @@ export type PendingCookie = {
 /**
  * Server-side Supabase client for authentication flows (OAuth, PKCE, exchangeCodeForSession).
  * Correctly reads and writes auth cookies (such as code verifiers) via Next.js `cookies()`.
+ * Ensures PKCE cookies work across cross-site redirects (Google → callback).
  */
 export async function createSupabaseAuthServerClient(pendingCookies?: PendingCookie[]) {
   const cookieStore = await cookies();
@@ -58,6 +59,12 @@ export async function createSupabaseAuthServerClient(pendingCookies?: PendingCoo
     process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
     {
+      auth: {
+        flowType: "pkce",
+        detectSessionInUrl: false,
+        persistSession: false,
+        autoRefreshToken: false,
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -65,9 +72,17 @@ export async function createSupabaseAuthServerClient(pendingCookies?: PendingCoo
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
+              // Allow cross-site cookies for PKCE flow (Google OAuth redirect)
+              const cookieOptions: CookieOptions = {
+                ...options,
+                sameSite: "lax" as const,
+                secure: true,
+                path: "/",
+                httpOnly: false,
+              };
+              cookieStore.set(name, value, cookieOptions);
               if (pendingCookies) {
-                pendingCookies.push({ name, value, options });
+                pendingCookies.push({ name, value, options: cookieOptions });
               }
             });
           } catch {
