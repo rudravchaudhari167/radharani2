@@ -10,6 +10,29 @@ export interface WishlistItem {
   addedAt?: string;
 }
 
+const WISHLIST_STORAGE_KEY = "radharani_wishlist_items";
+
+function getLocalWishlist(): WishlistItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalWishlist(items: WishlistItem[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    // Ignore localStorage quota errors
+  }
+}
+
 function mapWishlistItems(raw: unknown): WishlistItem[] {
   if (!raw || typeof raw !== "object") {
     return [];
@@ -74,13 +97,17 @@ interface WishlistState {
   isInWishlist: (productId: string) => boolean;
 }
 
-export const useWishlistStore = create<WishlistState>((set, get) => ({
-  items: [],
-  loading: false,
-  totalItems: 0,
+const initialLocalItems = getLocalWishlist();
 
-  setItems: (items) =>
-    set({ items, totalItems: items.length }),
+export const useWishlistStore = create<WishlistState>((set, get) => ({
+  items: initialLocalItems,
+  loading: false,
+  totalItems: initialLocalItems.length,
+
+  setItems: (items) => {
+    saveLocalWishlist(items);
+    set({ items, totalItems: items.length });
+  },
 
   fetchWishlist: async () => {
     set({ loading: true });
@@ -88,83 +115,99 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     try {
       const res = await fetch("/api/wishlist", { credentials: "include" });
       if (!res.ok) {
-        set({ items: [], totalItems: 0 });
+        const local = getLocalWishlist();
+        set({ items: local, totalItems: local.length });
         return;
       }
 
       const data = (await res.json()) as { wishlist?: unknown };
       const items = mapWishlistItems(data?.wishlist);
+      saveLocalWishlist(items);
       set({ items, totalItems: items.length });
     } catch {
-      set({ items: [], totalItems: 0 });
+      const local = getLocalWishlist();
+      set({ items: local, totalItems: local.length });
     } finally {
       set({ loading: false });
     }
   },
 
   toggleItem: async (productId, productData) => {
-    const exists = get().isInWishlist(productId);
+    const current = get().items;
+    const exists = current.some(
+      (item) => String(item.productId) === String(productId)
+    );
 
+    // 1. Instant optimistic update: update state synchronously in 0ms!
+    let nextItems: WishlistItem[];
+    if (exists) {
+      nextItems = current.filter(
+        (item) => String(item.productId) !== String(productId)
+      );
+    } else {
+      const newItem: WishlistItem = {
+        productId: String(productId),
+        name: productData?.name || "",
+        price: Number(productData?.price) || 0,
+        image: productData?.image || "",
+        slug: productData?.slug,
+        addedAt: new Date().toISOString(),
+      };
+      nextItems = [newItem, ...current];
+    }
+
+    // Set state immediately so heart turns red right now!
+    set({ items: nextItems, totalItems: nextItems.length });
+    saveLocalWishlist(nextItems);
+
+    // 2. Sync with server in the background
     try {
       if (exists) {
-        const res = await fetch("/api/wishlist", {
+        await fetch("/api/wishlist", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ productId }),
         });
-
-        if (!res.ok) {
-          return false;
-        }
-
-        const data = (await res.json()) as { wishlist?: unknown };
-        const items = mapWishlistItems(data?.wishlist);
-        set({ items, totalItems: items.length });
-        return true;
+      } else {
+        await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            productId,
+            name: productData?.name,
+            price: productData?.price,
+            image: productData?.image,
+          }),
+        });
       }
-
-      const res = await fetch("/api/wishlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          productId,
-          name: productData?.name,
-          price: productData?.price,
-          image: productData?.image,
-        }),
-      });
-
-      if (!res.ok) {
-        return false;
-      }
-
-      const data = (await res.json()) as { wishlist?: unknown };
-      const items = mapWishlistItems(data?.wishlist);
-      set({ items, totalItems: items.length });
-      return true;
     } catch {
-      return false;
+      // Retain optimistic local state if network or unauthenticated
     }
+
+    return true;
   },
 
   removeFromWishlist: async (productId) => {
+    const current = get().items;
+    const nextItems = current.filter(
+      (item) => String(item.productId) !== String(productId)
+    );
+    set({ items: nextItems, totalItems: nextItems.length });
+    saveLocalWishlist(nextItems);
+
     try {
-      const res = await fetch("/api/wishlist", {
+      await fetch("/api/wishlist", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ productId }),
       });
-      if (!res.ok) return false;
-      const data = (await res.json()) as { wishlist?: unknown };
-      const items = mapWishlistItems(data?.wishlist);
-      set({ items, totalItems: items.length });
-      return true;
     } catch {
-      return false;
+      // Keep optimistic removal
     }
+    return true;
   },
 
   isInWishlist: (productId) =>

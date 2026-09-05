@@ -97,7 +97,6 @@ function ProductPageContent({ params }: { params: ProductParams }) {
   const addToast = useToastStore((s) => s.addToast);
   const addItem = useCartStore((s) => s.addItem);
   const openCartDrawer = useCartStore((s) => s.openDrawer);
-  const isInWishlist = useWishlistStore((s) => s.isInWishlist);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -267,7 +266,9 @@ function ProductPageContent({ params }: { params: ProductParams }) {
   const price = Number(product.price) || 0;
   const oldPrice = product.oldPrice ? Number(product.oldPrice) : undefined;
   const discount = discountPercent(oldPrice, price);
-  const inWishlist = isInWishlist(product._id);
+  const inWishlist = useWishlistStore((s) =>
+    s.items.some((item) => String(item.productId) === String(product._id))
+  );
   const outOfStock = product.stock <= 0;
 
   return (

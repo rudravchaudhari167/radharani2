@@ -64,7 +64,7 @@ export function Providers({ children }: { children: ReactNode }) {
       fetchWishlist();
     } else if (initialized) {
       setCartItems([]);
-      setWishlistItems([]);
+      fetchWishlist();
     }
   }, [
     user,
@@ -72,7 +72,6 @@ export function Providers({ children }: { children: ReactNode }) {
     fetchCart,
     fetchWishlist,
     setCartItems,
-    setWishlistItems,
   ]);
 
   return <ToastProvider>{children}</ToastProvider>;

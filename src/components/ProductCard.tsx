@@ -41,8 +41,10 @@ export default function ProductCard({
 
   const addToast = useToastStore((s) => s.addToast);
   const addItem = useCartStore((s) => s.addItem);
-  const isInWishlist = useWishlistStore((s) => s.isInWishlist);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
+  const inWishlist = useWishlistStore((s) =>
+    s.items.some((item) => String(item.productId) === String(product._id))
+  );
 
   const price = Number(product.price) || 0;
   const oldPrice = product.oldPrice ? Number(product.oldPrice) : undefined;
@@ -50,7 +52,6 @@ export default function ProductCard({
   const primaryImage = imageList[0] || "";
   const secondaryImage = imageList[1] || primaryImage;
   const href = `/product/${product.slug || product._id}`;
-  const inWishlist = isInWishlist(product._id);
   const defaultSize = product.sizes?.[0] || "";
   const defaultColor = product.colors?.[0]?.name || "";
   const outOfStock = typeof product.stock === "number" && product.stock <= 0;
