@@ -74,10 +74,10 @@ function Hero() {
           initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.15 }}
-          className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-normal leading-[1.05] tracking-tight text-[var(--color-text)]"
+          className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-[1.05] tracking-tight text-neutral-950"
         >
-          <span className="block tracking-[0.08em]">RADHA RANI</span>
-          <span className="block font-serif italic font-normal text-2xl sm:text-4xl md:text-5xl mt-2 text-[var(--color-accent)]">
+          <span className="block tracking-[0.08em] font-extrabold text-black">RADHA RANI</span>
+          <span className="block font-serif italic font-bold text-2xl sm:text-4xl md:text-5xl mt-2 text-neutral-900">
             Divine Style. Eternal Bond.
           </span>
         </motion.h1>
@@ -86,7 +86,7 @@ function Hero() {
           initial={reduceMotion ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="mx-auto mt-6 max-w-lg text-sm sm:text-base font-normal leading-relaxed text-[var(--color-text-muted)]"
+          className="mx-auto mt-6 max-w-lg text-base sm:text-lg font-bold leading-relaxed text-neutral-950"
         >
           Contemporary women&apos;s fashion inspired by timeless Indian heritage.
         </motion.p>
