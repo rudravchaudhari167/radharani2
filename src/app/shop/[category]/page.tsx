@@ -9,7 +9,12 @@ type CategoryParams = Promise<{ category: string }>;
 function CategoryInner({ params }: { params: CategoryParams }) {
   const { category } = use(params);
   const normalized = category?.toLowerCase();
-  if (normalized === "men" || normalized === "accessories") {
+  if (
+    normalized === "men" ||
+    normalized === "accessories" ||
+    normalized === "unisex" ||
+    normalized === "kids"
+  ) {
     redirect("/shop/women");
   }
   return <ShopPageContent presetCategory={category} fixedCategory />;

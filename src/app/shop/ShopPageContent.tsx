@@ -299,9 +299,9 @@ function FiltersPanel({
             }`}
           >
             <Feather size={14} className="shrink-0" />
-            All Products
+            All Garments
           </button>
-          {CATEGORIES.filter((c) => c !== "MEN" && c !== "ACCESSORIES").map((category) => {
+          {CATEGORIES.filter((c) => c === "WOMEN").map((category) => {
             const isActive = activeCategory === category;
             return (
               <button
@@ -314,7 +314,7 @@ function FiltersPanel({
                     : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
                 }`}
               >
-                <span className="capitalize">{category.toLowerCase()}</span>
+                <span className="capitalize">Women&apos;s Collection</span>
                 {isActive && (
                   <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
                 )}
@@ -704,7 +704,7 @@ export default function ShopPageContent({
   const serverParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set("limit", "50");
-    if (activeCategory) params.set("category", activeCategory);
+    params.set("category", activeCategory || "WOMEN");
     const min = priceRange.min.trim();
     const max = priceRange.max.trim();
     if (min) params.set("minPrice", min);

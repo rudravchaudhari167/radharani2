@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
         destination: "/shop/women",
         permanent: true,
       },
+      {
+        source: "/shop/unisex",
+        destination: "/shop/women",
+        permanent: true,
+      },
+      {
+        source: "/shop/kids",
+        destination: "/shop/women",
+        permanent: true,
+      },
     ];
   },
   images: {
