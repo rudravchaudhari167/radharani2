@@ -111,7 +111,6 @@ function ProductPageContent({ params }: { params: ProductParams }) {
   const [quantity, setQuantity] = useState(1);
   const [addingToBag, setAddingToBag] = useState(false);
   const [show3DModal, setShow3DModal] = useState(false);
-  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
   // Delivery pincode state
   const [pincode, setPincode] = useState("");
@@ -184,19 +183,16 @@ function ProductPageContent({ params }: { params: ProductParams }) {
 
   const handleAddToBag = async () => {
     if (!product) return;
-    if (product.sizes?.length && !selectedSize) {
-      addToast("Please select a size", "info");
-      return;
-    }
     if (product.stock <= 0) {
       addToast("This item is currently sold out", "info");
       return;
     }
 
     setAddingToBag(true);
+    const chosenSize = selectedSize || product.sizes?.[0] || "";
     const ok = await addItem(
       product._id,
-      selectedSize || "",
+      chosenSize,
       selectedColor || "",
       quantity
     );
@@ -212,19 +208,16 @@ function ProductPageContent({ params }: { params: ProductParams }) {
 
   const handleBuyNow = async () => {
     if (!product) return;
-    if (product.sizes?.length && !selectedSize) {
-      addToast("Please select a size", "info");
-      return;
-    }
     if (product.stock <= 0) {
       addToast("This item is currently sold out", "info");
       return;
     }
 
     setAddingToBag(true);
+    const chosenSize = selectedSize || product.sizes?.[0] || "";
     const ok = await addItem(
       product._id,
-      selectedSize || "",
+      chosenSize,
       selectedColor || "",
       quantity
     );
@@ -444,38 +437,6 @@ function ProductPageContent({ params }: { params: ProductParams }) {
                         style={{ backgroundColor: c.hex }}
                       />
                       <span>{c.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Size Selection & Size Guide */}
-            {product.sizes && product.sizes.length > 0 && (
-              <div>
-                <div className="flex justify-between items-center text-xs font-medium text-[var(--color-text)] mb-2.5">
-                  <span className="uppercase tracking-wider">Select Size</span>
-                  <button
-                    type="button"
-                    onClick={() => setSizeGuideOpen(true)}
-                    className="underline text-[var(--color-accent)] tracking-wider hover:opacity-80"
-                  >
-                    Size Guide
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2.5">
-                  {product.sizes.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSelectedSize(s)}
-                      className={`flex h-11 min-w-11 items-center justify-center rounded-md border text-xs font-medium uppercase transition-all ${
-                        selectedSize === s
-                          ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-white shadow-xs"
-                          : "border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-accent)]"
-                      }`}
-                    >
-                      {s}
                     </button>
                   ))}
                 </div>
@@ -766,63 +727,6 @@ function ProductPageContent({ params }: { params: ProductParams }) {
         )}
       </AnimatePresence>
 
-      {/* ======================================================== */}
-      {/* Size Guide Modal                                           */}
-      {/* ======================================================== */}
-      <AnimatePresence>
-        {sizeGuideOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSizeGuideOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-xs"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              className="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)] p-6 shadow-2xl"
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-[var(--color-border)]">
-                <span className="font-serif text-lg font-medium text-[var(--color-text)]">
-                  Size Guide (Inches)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSizeGuideOpen(false)}
-                  className="rounded-full p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] uppercase tracking-wider">
-                      <th className="py-2.5">Size</th>
-                      <th className="py-2.5">Chest</th>
-                      <th className="py-2.5">Shoulder</th>
-                      <th className="py-2.5">Length</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border)] text-[var(--color-text)]">
-                    <tr><td className="py-2.5 font-semibold">S</td><td>38&quot;</td><td>16.5&quot;</td><td>28&quot;</td></tr>
-                    <tr><td className="py-2.5 font-semibold">M</td><td>40&quot;</td><td>17.5&quot;</td><td>29&quot;</td></tr>
-                    <tr><td className="py-2.5 font-semibold">L</td><td>42&quot;</td><td>18.5&quot;</td><td>30&quot;</td></tr>
-                    <tr><td className="py-2.5 font-semibold">XL</td><td>44&quot;</td><td>19.5&quot;</td><td>31&quot;</td></tr>
-                    <tr><td className="py-2.5 font-semibold">XXL</td><td>46&quot;</td><td>20.5&quot;</td><td>32&quot;</td></tr>
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-4 text-[11px] text-[var(--color-text-muted)]">
-                Measurements are for the garment. For a relaxed fit, choose your standard size.
-              </p>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

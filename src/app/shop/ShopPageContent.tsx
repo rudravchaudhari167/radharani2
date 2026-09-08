@@ -336,32 +336,6 @@ function FiltersPanel({
         />
       </div>
 
-      {/* Size */}
-      <div>
-        <FilterSectionTitle>Size</FilterSectionTitle>
-        <div className="grid grid-cols-3 gap-2">
-          {SIZES.map((size) => {
-            const isSelected = selectedSizes.includes(size);
-            return (
-              <button
-                key={size}
-                type="button"
-                onClick={() => onToggleSize(size)}
-                aria-pressed={isSelected}
-                className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-semibold transition-all duration-200 ${
-                  isSelected
-                    ? "border-[var(--color-primary)] bg-gradient-to-r from-[var(--color-primary)]/25 to-[var(--color-secondary)]/20 text-[var(--color-primary-light)] shadow-[0_0_16px_-4px_rgba(124,58,237,0.6)]"
-                    : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:border-white/25 hover:text-[var(--color-text)]"
-                }`}
-              >
-                {isSelected && <Check size={12} />}
-                {size}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Colors */}
       <div>
         <FilterSectionTitle>Colors</FilterSectionTitle>
