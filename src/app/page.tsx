@@ -13,25 +13,25 @@ import ProductCard, { type ProductCardProduct } from "@/components/ProductCard";
 
 const COLLECTIONS = [
   {
-    name: "MEN",
-    eyebrow: "Contemporary Krishna Silhouettes",
-    description: "Contemporary silhouettes inspired by Krishna.",
-    href: "/shop/men",
-    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    name: "WOMEN",
-    eyebrow: "Graceful Radha Elegance",
-    description: "Graceful forms inspired by Radha.",
+    name: "KURTIS & ANARKALIS",
+    eyebrow: "Sacred Radha Grace",
+    description: "Flowing georgette kurti sets and floor-sweeping anarkalis with delicate zardozi detailing.",
     href: "/shop/women",
     image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000&auto=format&fit=crop",
   },
   {
-    name: "ACCESSORIES",
-    eyebrow: "Timeless Adornments",
-    description: "Subtle details inspired by timeless symbolism.",
-    href: "/shop/accessories",
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1000&auto=format&fit=crop",
+    name: "SAREES & LEHENGAS",
+    eyebrow: "Royal Weaves & Festive Couture",
+    description: "Handwoven art-silks, heritage Banarasi borders, and opulent ceremonial lehengas.",
+    href: "/shop/women",
+    image: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    name: "CONTEMPORARY DRESSES",
+    eyebrow: "Fluid Modern Silhouettes",
+    description: "Liquid satin midi dresses, breezy mul-mul palazzo co-ords, and everyday elegance.",
+    href: "/shop/women",
+    image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop",
   },
 ];
 
@@ -88,7 +88,7 @@ function Hero() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mx-auto mt-6 max-w-lg text-sm sm:text-base font-normal leading-relaxed text-[var(--color-text-muted)]"
         >
-          Contemporary fashion inspired by timeless Indian heritage.
+          Contemporary women&apos;s fashion inspired by timeless Indian heritage.
         </motion.p>
 
         <motion.div
@@ -141,7 +141,7 @@ function FeaturedCollections() {
             Featured Collections
           </h2>
           <p className="mt-3 text-sm text-[var(--color-text-muted)]">
-            Graceful forms and contemporary silhouettes shaped by timeless devotion.
+            Graceful ethnic silhouettes and contemporary feminine forms shaped by timeless devotion.
           </p>
         </div>
 

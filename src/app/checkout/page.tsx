@@ -459,7 +459,7 @@ export default function CheckoutPage() {
           Your shopping bag is empty
         </h1>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-[#666666]">
-          You have no garments or accessories selected for checkout. Explore the
+          You have no garments selected for checkout. Explore the
           latest collection and discover pieces crafted for eternity.
         </p>
         <Link

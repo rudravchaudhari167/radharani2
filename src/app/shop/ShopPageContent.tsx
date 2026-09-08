@@ -301,7 +301,7 @@ function FiltersPanel({
             <Feather size={14} className="shrink-0" />
             All Products
           </button>
-          {CATEGORIES.map((category) => {
+          {CATEGORIES.filter((c) => c !== "MEN" && c !== "ACCESSORIES").map((category) => {
             const isActive = activeCategory === category;
             return (
               <button

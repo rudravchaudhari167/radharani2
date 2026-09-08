@@ -25,10 +25,10 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Radha Rani | Divine Style. Eternal Bond.",
   description:
-    "Contemporary fashion inspired by timeless Indian heritage. Explore premium clothing and accessories at Radha Rani.",
+    "Contemporary women's fashion inspired by timeless Indian heritage. Explore handcrafted ethnic wear, sarees, and couture at Radha Rani.",
   openGraph: {
     title: "Radha Rani | Divine Style. Eternal Bond.",
-    description: "Contemporary fashion inspired by timeless Indian heritage.",
+    description: "Contemporary women's fashion inspired by timeless Indian heritage.",
     type: "website",
   },
 };

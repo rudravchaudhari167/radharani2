@@ -32,30 +32,30 @@ const CHAPTERS: CollectionChapter[] = [
     highlights: ["Hand-embroidered Zardozi", "Pure Mulberry Silks", "Featherlight Drapes"],
   },
   {
-    id: "krishna-silhouettes",
+    id: "vrindavan-anarkalis",
     chapter: "CHAPTER II",
-    title: "Krishna Silhouettes",
-    subtitle: "Regal Architecture & Contemporary Cuts",
+    title: "Vrindavan Anarkalis & Festive Ensembles",
+    subtitle: "Regal Flairs & Sacred Zardozi",
     description:
-      "Draped angrakhas, raw silk bundi jackets, and tailored asymmetric kurtas in midnight blues, peacock indigos, and warm earth tones inspired by Krishna's majestic aura.",
+      "Floor-sweeping anarkalis, dupioni silk flared lehengas, and layered ethnic silhouettes in deep peacock indigos, lotus pinks, and midnight hues.",
     image:
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=1200&auto=format&fit=crop",
-    palette: ["#1D3048", "#2D4A6B", "#D4AF37", "#1E2022"],
-    href: "/shop/men",
-    highlights: ["Raw Silk Tailoring", "Handcrafted Metal Buttons", "Contemporary Drapes"],
+      "https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=1200&auto=format&fit=crop",
+    palette: ["#1D3048", "#2D4A6B", "#D4AF37", "#6D1A7A"],
+    href: "/shop/women",
+    highlights: ["Intricate Bodice Zardozi", "Pure Mulberry Silks & Chiffon", "Graceful Twirls & Drapes"],
   },
   {
-    id: "vrindavan-adornments",
+    id: "contemporary-drapes",
     chapter: "CHAPTER III",
-    title: "Sacred Adornments",
-    subtitle: "Holy Motifs & Fine Accents",
+    title: "Contemporary Drapes & Co-ord Sets",
+    subtitle: "Breezy Mul-Mul & Liquid Satins",
     description:
-      "Hand-hammered brass cuffs, baroque pearl strings, and delicate silver filigree pendants echoing holy motifs from the sacred groves of Vrindavan.",
+      "Modern slip dresses, fluted satin midis, and relaxed two-piece palazzo co-ord sets designed for effortless feminine grace and everyday luxury.",
     image:
-      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1200&auto=format&fit=crop",
-    palette: ["#C5A059", "#EFEFE8", "#3E442B", "#997B66"],
-    href: "/shop/accessories",
-    highlights: ["Hand-hammered Brass", "Freshwater Pearls", "Temple Jewelry Heritage"],
+      "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1200&auto=format&fit=crop",
+    palette: ["#C5A059", "#EFEFE8", "#2E5E3D", "#997B66"],
+    href: "/shop/women",
+    highlights: ["Pure Mul Mul Cottons", "Hand-painted Lotus Motifs", "Fluid Satin Touch"],
   },
   {
     id: "ceremonial-edition",
@@ -65,9 +65,9 @@ const CHAPTERS: CollectionChapter[] = [
     description:
       "Exclusive celebratory garments weaving gold zari yarns with jewel-toned textiles—crimson, emerald, and turmeric gold—crafted for sanctified occasions.",
     image:
-      "https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1200&auto=format&fit=crop",
     palette: ["#800020", "#004D40", "#D4AF37", "#4A0E17"],
-    href: "/shop",
+    href: "/shop/women",
     highlights: ["Banarasi Zari Weaves", "Occasion Wear Elegance", "Limited Seasonal Runs"],
   },
 ];
