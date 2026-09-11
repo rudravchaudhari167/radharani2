@@ -24,7 +24,7 @@ function BrandPanel() {
       <div className="relative z-10">
         <Link href="/" className="inline-block">
           <span className="font-serif text-2xl font-normal tracking-[0.3em] text-white">
-            VRINDAV
+            RADHA RANI
           </span>
           <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#B8965A]">
             Atelier de Dévotion

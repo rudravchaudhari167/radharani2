@@ -189,7 +189,7 @@ export default function WishlistPage() {
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-xs text-[#999999]">
-                          VRINDAV
+                          Radha Rani
                         </div>
                       )}
                     </Link>

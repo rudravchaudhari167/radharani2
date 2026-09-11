@@ -206,7 +206,7 @@ function OrderSuccessContent() {
           </h1>
           <p className="mt-2 text-sm text-[#666666]">
             {user?.name ? `${user.name.split(" ")[0]}, your` : "Your"} piece from
-            VRINDAV has been confirmed. A receipt has been dispatched to your
+            Radha Rani has been confirmed. A receipt has been dispatched to your
             registered email.
           </p>
         </motion.div>
@@ -318,7 +318,7 @@ function OrderSuccessContent() {
             &ldquo;Divine Style. Eternal Bond.&rdquo;
           </p>
           <p className="mt-1 text-[11px] uppercase tracking-[0.25em] text-[#999999]">
-            VRINDAV Atelier
+            Radha Rani Atelier
           </p>
         </div>
       </div>

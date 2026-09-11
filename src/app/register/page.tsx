@@ -84,7 +84,7 @@ function BrandPanel({
       <div className="relative z-10">
         <Link href="/" className="inline-block">
           <span className="font-serif text-2xl font-normal tracking-[0.3em] text-white">
-            VRINDAV
+            RADHA RANI
           </span>
           <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#B8965A]">
             Atelier de Dévotion
@@ -241,7 +241,7 @@ function RegisterPageContent() {
 
         setUser(normalizeUser(data.user));
         await Promise.all([fetchCart(), fetchWishlist()]);
-        addToast("Welcome to VRINDAV", "success");
+        addToast("Welcome to Radha Rani", "success");
         router.push("/account");
         router.refresh();
       } catch {
@@ -310,7 +310,7 @@ function RegisterPageContent() {
               Create Your Account
             </h1>
             <p className="mt-1 text-xs text-[#666666]">
-              Enter your details to create your private VRINDAV profile.
+              Enter your details to create your private Radha Rani profile.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">

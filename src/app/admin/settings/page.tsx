@@ -196,15 +196,15 @@ export default function AdminSettingsPage() {
               Store Settings
             </h2>
             <p className="mb-5 text-xs text-[var(--color-text-muted)]">
-              Shipping configuration for VRINDAV
+              Shipping configuration for Radha Rani
             </p>
 
             <div className="mb-5 flex items-center gap-3 rounded-xl border border-[var(--color-primary-light)]/20 bg-[var(--color-primary)]/5 px-4 py-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-base font-black text-white">
-                V
+                R
               </div>
               <div>
-                <p className="text-sm font-black tracking-[0.2em]">VRINDAV</p>
+                <p className="text-sm font-black tracking-[0.2em]">RADHA RANI</p>
                 <p className="text-xs text-[var(--color-text-muted)]">
                   Free shipping threshold ₹1,999
                 </p>

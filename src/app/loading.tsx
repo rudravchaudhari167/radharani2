@@ -12,7 +12,7 @@ export default function Loading() {
         className="flex flex-col items-center"
       >
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#171717] text-xl font-normal text-white">
-          <span className="font-serif">V</span>
+          <span className="font-serif">R</span>
         </div>
 
         <motion.p
@@ -21,7 +21,7 @@ export default function Loading() {
           transition={{ duration: 0.4, delay: 0.15 }}
           className="mt-5 font-serif text-sm tracking-[0.3em] text-[#171717] uppercase"
         >
-          VRINDAV
+          RADHA RANI
         </motion.p>
 
         {/* Minimal progress line */}

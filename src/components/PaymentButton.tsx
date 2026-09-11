@@ -120,7 +120,7 @@ export default function PaymentButton({
         key: keyId,
         amount: amountInPaise,
         currency: "INR",
-        name: "VRINDAV",
+        name: "Radha Rani",
         description: orderDetails.description || "Divine Style. Eternal Bond.",
         order_id: propOrderId || undefined, // Binds payment to server order for UPI/Cards/NetBanking
         prefill: {

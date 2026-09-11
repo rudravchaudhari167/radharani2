@@ -81,7 +81,7 @@ function BrandPanel({
       <div className="relative z-10">
         <Link href="/" className="inline-block">
           <span className="font-serif text-2xl font-normal tracking-[0.3em] text-white">
-            VRINDAV
+            RADHA RANI
           </span>
           <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#B8965A]">
             Atelier de Dévotion
@@ -212,7 +212,7 @@ function LoginPageContent() {
 
         setUser(normalizeUser(data.user));
         await Promise.all([fetchCart(), fetchWishlist()]);
-        addToast("Welcome back to VRINDAV", "success");
+        addToast("Welcome back to Radha Rani", "success");
 
         const target =
           redirectTo && redirectTo.startsWith("/") ? redirectTo : "/account";
@@ -279,7 +279,7 @@ function LoginPageContent() {
               Sign In
             </p>
             <h1 className="mt-2 font-serif text-2xl font-light text-[#171717] sm:text-3xl">
-              Log in to VRINDAV
+              Log in to Radha Rani
             </h1>
             <p className="mt-1 text-xs text-[#666666]">
               Enter your registered email address to proceed.
@@ -401,7 +401,7 @@ function LoginPageContent() {
             </form>
 
             <p className="mt-6 text-center text-xs text-[#666666]">
-              New to VRINDAV?{" "}
+              New to Radha Rani?{" "}
               <Link
                 href="/register"
                 className="font-semibold text-[#171717] underline hover:text-[#2D4A6B]"

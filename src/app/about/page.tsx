@@ -25,14 +25,14 @@ export default function AboutPage() {
           >
             <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E7E3DC] bg-white px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#2D4A6B]">
               <Sparkles size={12} className="text-[#B8965A]" />
-              The Story of VRINDAV
+              The Story of Radha Rani
             </span>
             <h1 className="mt-4 font-serif text-4xl font-light leading-[1.15] tracking-tight text-[#171717] sm:text-6xl lg:text-7xl">
               Where eternal devotion meets{" "}
               <span className="italic font-normal">modern sartorial grace</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-sm font-light leading-relaxed text-[#666666] sm:text-base">
-              VRINDAV was founded on the belief that sacred inspiration and high
+              Radha Rani was founded on the belief that sacred inspiration and high
               fashion can coexist in pure harmony. Every garment is conceived as
               a testament to love, craft, and understated elegance.
             </p>
@@ -47,7 +47,7 @@ export default function AboutPage() {
             <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-[#F4F1EA]">
               <Image
                 src="/hero-bg.png"
-                alt="VRINDAV atelier inspiration"
+                alt="Radha Rani atelier inspiration"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -101,7 +101,7 @@ export default function AboutPage() {
               Foundations
             </p>
             <h2 className="mt-2 font-serif text-3xl font-light tracking-tight text-[#171717] sm:text-4xl">
-              The Four Pillars of VRINDAV
+              The Four Pillars of Radha Rani
             </h2>
           </div>
 
@@ -186,7 +186,7 @@ export default function AboutPage() {
                 Every order arrives in our signature keepsake box: wrapped in
                 scented mulberry tissue, accompanied by an authentication card
                 detailing the craftspeople behind the garment, and sealed with a
-                gold-embossed VRINDAV crest.
+                gold-embossed Radha Rani crest.
               </p>
               <div className="pt-2">
                 <Link

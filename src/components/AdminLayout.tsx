@@ -59,11 +59,11 @@ function SidebarContent({
       <div className="border-b border-[#E7E3DC] px-6 pb-6 pt-7">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-[#171717] text-sm font-semibold tracking-wider text-white">
-            V
+            R
           </div>
           <div className="min-w-0">
             <p className="font-serif text-sm font-normal tracking-[0.25em] text-[#171717]">
-              VRINDAV
+              RADHA RANI
             </p>
             <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-[#2D4A6B]">
               Executive Portal
@@ -228,7 +228,7 @@ export default function AdminLayout({ children, active }: AdminLayoutProps) {
           <div className="hidden items-center gap-2 text-xs text-[#666666] lg:flex">
             <ShieldCheck size={14} className="text-[#2D4A6B]" />
             <span className="font-semibold uppercase tracking-[0.25em] text-[#171717]">
-              VRINDAV ATELIER CONTROL
+              RADHA RANI ATELIER CONTROL
             </span>
           </div>
 

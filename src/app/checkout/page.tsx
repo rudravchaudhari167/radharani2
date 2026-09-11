@@ -422,7 +422,7 @@ export default function CheckoutPage() {
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
   const paymentPrefill: PaymentOrderDetails = useMemo(
     () => ({
-      description: `Order of ${cartItems.length} piece(s) from VRINDAV`,
+      description: `Order of ${cartItems.length} piece(s) from Radha Rani`,
       prefill: {
         name: selectedAddress?.fullName || user?.name || "",
         email: selectedAddress?.email || user?.email || "",
