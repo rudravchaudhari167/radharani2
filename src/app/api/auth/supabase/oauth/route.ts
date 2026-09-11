@@ -70,6 +70,10 @@ export async function POST(request: NextRequest) {
         redirectTo,
         skipBrowserRedirect: false,
         scopes: "openid email profile",
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
 
@@ -121,6 +125,10 @@ export async function GET(request: NextRequest) {
       options: {
         redirectTo,
         scopes: "openid email profile",
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
 

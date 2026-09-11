@@ -154,7 +154,7 @@ function LoginPageContent() {
     if (msg) {
       if (msg.includes("Unable to exchange external code")) {
         setFormError(
-          "Google sign-in could not be completed (OAuth exchange failed). Please log in with your email & password or verify the Google credentials in Supabase."
+          `Google sign-in could not be completed (${msg}). Please verify that the Google OAuth Client Secret & Authorized Redirect URI are configured correctly in Supabase.`
         );
       } else {
         setFormError(msg);
@@ -243,6 +243,7 @@ function LoginPageContent() {
       const res = await fetch("/api/auth/supabase/oauth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ provider: "google" }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
