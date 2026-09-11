@@ -95,7 +95,7 @@ function Hero() {
           initial={reduceMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.45 }}
-          className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:gap-4"
+          className="mt-10 flex items-center justify-center"
         >
           <Link
             href="/shop"
@@ -103,12 +103,6 @@ function Hero() {
           >
             <span>SHOP CATALOG</span>
             <ArrowRight size={14} />
-          </Link>
-          <Link
-            href="/shop"
-            className="flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg)]/80 px-8 py-3.5 text-xs font-medium uppercase tracking-[0.16em] text-[var(--color-text)] backdrop-blur-xs transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
-          >
-            EXPLORE STORE
           </Link>
         </motion.div>
       </div>
