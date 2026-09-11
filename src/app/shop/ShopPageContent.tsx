@@ -292,35 +292,14 @@ function FiltersPanel({
               if (activeCategory === null) return;
               onCategorySelect(activeCategory);
             }}
-            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-              activeCategory === null
-                ? "bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
-                : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
-            }`}
+            className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
           >
-            <Feather size={14} className="shrink-0" />
-            All Garments
+            <span className="flex items-center gap-2">
+              <Feather size={14} className="shrink-0" />
+              All Garments
+            </span>
+            <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
           </button>
-          {CATEGORIES.filter((c) => c === "WOMEN").map((category) => {
-            const isActive = activeCategory === category;
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => onCategorySelect(category)}
-                className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                  isActive
-                    ? "bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
-                    : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
-                }`}
-              >
-                <span className="capitalize">Women&apos;s Collection</span>
-                {isActive && (
-                  <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
-                )}
-              </button>
-            );
-          })}
         </div>
       </div>
 
