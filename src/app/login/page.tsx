@@ -11,15 +11,12 @@ import {
   Lock,
   LoaderCircle,
   Mail,
-  Phone,
   Sparkles,
 } from "lucide-react";
 import { useAuthStore, type User } from "@/lib/store";
 import { useCartStore } from "@/lib/cart-store";
 import { useWishlistStore } from "@/lib/wishlist-store";
 import { useToastStore } from "@/lib/toast-store";
-
-type LoginMode = "email" | "phone";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -133,9 +130,7 @@ function LoginPageContent() {
   const fetchCart = useCartStore((s) => s.fetchCart);
   const fetchWishlist = useWishlistStore((s) => s.fetchWishlist);
 
-  const [mode, setMode] = useState<LoginMode>("email");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
 
@@ -174,19 +169,10 @@ function LoginPageContent() {
       setFieldErrors({});
 
       const errors: Record<string, string> = {};
-      if (mode === "email") {
-        if (!email.trim()) {
-          errors.email = "Email is required";
-        } else if (!EMAIL_REGEX.test(email.trim())) {
-          errors.email = "Please enter a valid email address";
-        }
-      } else {
-        const digits = phone.replace(/\D/g, "");
-        if (!phone.trim()) {
-          errors.phone = "Phone number is required";
-        } else if (!/^[6-9]\d{9}$/.test(digits)) {
-          errors.phone = "Enter a valid 10-digit Indian mobile number";
-        }
+      if (!email.trim()) {
+        errors.email = "Email is required";
+      } else if (!EMAIL_REGEX.test(email.trim())) {
+        errors.email = "Please enter a valid email address";
       }
       if (!password) {
         errors.password = "Password is required";
@@ -199,10 +185,11 @@ function LoginPageContent() {
 
       setLoading(true);
       try {
-        const payload =
-          mode === "email"
-            ? { email: email.trim(), password, loginType: "email" }
-            : { phone: phone.trim(), password, loginType: "phone" };
+        const payload = {
+          email: email.trim(),
+          password,
+          loginType: "email",
+        };
 
         const res = await fetch("/api/auth/login", {
           method: "POST",
@@ -238,9 +225,7 @@ function LoginPageContent() {
       }
     },
     [
-      mode,
       email,
-      phone,
       password,
       setUser,
       fetchCart,
@@ -297,85 +282,34 @@ function LoginPageContent() {
               Log in to VRINDAV
             </h1>
             <p className="mt-1 text-xs text-[#666666]">
-              Enter your registered email or phone to proceed.
+              Enter your registered email address to proceed.
             </p>
 
-            {/* Mode toggle */}
-            <div className="mt-6 grid grid-cols-2 gap-1 rounded-sm border border-[#E7E3DC] bg-[#FAF9F6] p-1">
-              {(["email", "phone"] as LoginMode[]).map((m) => {
-                const active = mode === m;
-                return (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMode(m)}
-                    className={`flex items-center justify-center gap-1.5 rounded-sm py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                      active
-                        ? "bg-[#171717] text-white"
-                        : "text-[#666666] hover:text-[#171717]"
-                    }`}
-                  >
-                    {m === "email" ? <Mail size={13} /> : <Phone size={13} />}
-                    {m}
-                  </button>
-                );
-              })}
-            </div>
-
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              {mode === "email" ? (
-                <div>
-                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail
-                      size={15}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
-                    />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@domain.com"
-                      autoComplete="email"
-                      className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
-                    />
-                  </div>
-                  {fieldErrors.email && (
-                    <p className="mt-1 text-[11px] text-red-600">
-                      {fieldErrors.email}
-                    </p>
-                  )}
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail
+                    size={15}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]"
+                  />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@domain.com"
+                    autoComplete="email"
+                    className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-10 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
+                  />
                 </div>
-              ) : (
-                <div>
-                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
-                    Mobile Number
-                  </label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#666666]">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      value={phone}
-                      onChange={(e) =>
-                        setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
-                      }
-                      placeholder="98765 43210"
-                      autoComplete="tel"
-                      className="w-full rounded-sm border border-[#E7E3DC] bg-white py-2.5 pl-12 pr-3 text-xs text-[#171717] placeholder:text-[#999999] focus:border-[#171717] focus:outline-none"
-                    />
-                  </div>
-                  {fieldErrors.phone && (
-                    <p className="mt-1 text-[11px] text-red-600">
-                      {fieldErrors.phone}
-                    </p>
-                  )}
-                </div>
-              )}
+                {fieldErrors.email && (
+                  <p className="mt-1 text-[11px] text-red-600">
+                    {fieldErrors.email}
+                  </p>
+                )}
+              </div>
 
               {/* Password */}
               <div>
