@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, use } from "react";
+import CreativeShopExperience from "./CreativeShopExperience";
 import ShopPageContent from "./ShopPageContent";
 
 type SearchParams = Promise<{
@@ -17,12 +18,20 @@ function ShopInner({
     ? params.category[params.category.length - 1]
     : params.category;
 
-  return (
-    <ShopPageContent
-      presetCategory={rawCategory ? String(rawCategory) : null}
-      fixedCategory={false}
-    />
-  );
+  // If explicitly queried with category or search query params, render the filtered catalogue view;
+  // Otherwise, render the unique creative lookbook boutique experience!
+  const hasSpecificQuery = Boolean(params.search || params.size || params.color || params.minPrice || params.maxPrice);
+
+  if (hasSpecificQuery) {
+    return (
+      <ShopPageContent
+        presetCategory={rawCategory ? String(rawCategory) : null}
+        fixedCategory={false}
+      />
+    );
+  }
+
+  return <CreativeShopExperience />;
 }
 
 export default function ShopPage({

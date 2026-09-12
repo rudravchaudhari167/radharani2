@@ -52,12 +52,12 @@ const EMPTY_VALUES: ProductFormValues = {
   description: "",
   price: "",
   oldPrice: "",
-  category: "MEN",
-  subcategory: "Kurtas",
+  category: "WOMEN",
+  subcategory: "Sarees",
   stock: "25",
   sku: "",
   tags: "",
-  sizes: ["S", "M", "L", "XL"],
+  sizes: ["XS", "S", "M", "L", "XL"],
   colors: [],
   images: [],
   model3D: "",
@@ -66,14 +66,19 @@ const EMPTY_VALUES: ProductFormValues = {
 };
 
 export const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
-export const CATEGORIES = ["MEN", "WOMEN", "UNISEX", "KIDS", "ACCESSORIES"];
+export const CATEGORIES = ["WOMEN"];
 
 export const CLOTHING_SUBCATEGORIES: Record<string, string[]> = {
-  MEN: ["Kurtas", "Shirts", "Dhotis", "Shawls", "Hoodies", "T-Shirts", "Jackets", "Co-ord Sets", "Accessories"],
-  WOMEN: ["Sarees", "Kurtis", "Anarkalis", "Lehengas", "Dresses", "Dupattas", "Tops", "Jackets", "Co-ord Sets", "Accessories"],
-  UNISEX: ["Hoodies", "T-Shirts", "Kurtas", "Jackets", "Overshirts", "Shawls", "Scarves"],
-  KIDS: ["Kurtas", "Dresses", "T-Shirts", "Sets", "Accessories"],
-  ACCESSORIES: ["Shawls", "Dupattas", "Jewelry", "Bags", "Caps", "Footwear"],
+  WOMEN: [
+    "Sarees",
+    "Anarkalis",
+    "Lehengas",
+    "Kurtis & Tunics",
+    "Dresses",
+    "Gowns",
+    "Dupattas & Drapes",
+    "Co-ord Sets",
+  ],
 };
 
 export const BRAND_COLOR_PRESETS: IColor[] = [
@@ -123,7 +128,7 @@ export function getInitialValues(product?: {
     description: product.description || "",
     price: product.price !== undefined ? String(product.price) : "",
     oldPrice: product.oldPrice !== undefined ? String(product.oldPrice) : "",
-    category: product.category || "MEN",
+    category: product.category || "WOMEN",
     subcategory: product.subcategory || "Kurtas",
     stock: product.stock !== undefined ? String(product.stock) : "0",
     sku: product.sku || "",
@@ -347,8 +352,8 @@ export default function ProductForm({
         : [
             "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=700&auto=format&fit=crop",
           ],
-    category: values.category || "MEN",
-    sizes: values.sizes.length > 0 ? values.sizes : ["S", "M", "L", "XL"],
+    category: values.category || "WOMEN",
+    sizes: values.sizes.length > 0 ? values.sizes : ["XS", "S", "M", "L", "XL"],
     colors:
       values.colors.length > 0
         ? values.colors
@@ -364,12 +369,13 @@ export default function ProductForm({
   };
 
   const subcategoryList = CLOTHING_SUBCATEGORIES[values.category] || [
-    "Kurtas",
-    "Shirts",
+    "Sarees",
+    "Anarkalis",
+    "Lehengas",
+    "Kurtis & Tunics",
     "Dresses",
-    "Hoodies",
-    "T-Shirts",
-    "Accessories",
+    "Gowns",
+    "Dupattas & Drapes",
   ];
 
   return (
@@ -414,27 +420,13 @@ export default function ProductForm({
               </div>
 
               {/* Category */}
-              <Field label="Department / Category" required>
-                <select
-                  value={values.category}
-                  onChange={(e) => {
-                    const newCat = e.target.value;
-                    set("category", newCat);
-                    const subList = CLOTHING_SUBCATEGORIES[newCat] || [];
-                    if (subList.length > 0) {
-                      set("subcategory", subList[0]);
-                    }
-                  }}
-                  className={`${inputClass} ${
-                    fieldErrors.category ? "border-[var(--color-secondary)]/60" : ""
-                  }`}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c} className="bg-[#171717] text-white">
-                      {c}
-                    </option>
-                  ))}
-                </select>
+              <Field label="Atelier Department" required>
+                <div className="flex h-11 items-center justify-between rounded-xl border border-[var(--color-border)] bg-white/5 px-3.5 text-sm font-semibold text-[var(--color-primary-light)]">
+                  <span>Radha Rani Women&apos;s Couture</span>
+                  <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                    WOMEN
+                  </span>
+                </div>
               </Field>
 
               {/* Subcategory / Clothing type */}
@@ -606,7 +598,7 @@ export default function ProductForm({
                     type="text"
                     value={values.sku}
                     onChange={(e) => set("sku", e.target.value.toUpperCase())}
-                    placeholder="VRN-MEN-KURTA-001"
+                    placeholder="VRN-WOM-SAREE-001"
                     className={`${inputClass} font-mono ${
                       fieldErrors.sku ? "border-[var(--color-secondary)]/60" : ""
                     }`}

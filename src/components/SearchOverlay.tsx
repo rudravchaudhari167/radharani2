@@ -20,12 +20,12 @@ interface SearchOverlayProps {
 }
 
 const POPULAR_SEARCHES = [
-  "Krishna Flute Shirt",
-  "Peacock Print",
-  "Linen Overshirt",
-  "Radha Saree",
-  "Dhoti Set",
-  "Kurta",
+  "Banarasi Saree",
+  "Kalidar Anarkali",
+  "Peacock Silk Dupatta",
+  "Royal Bridal Lehenga",
+  "Chanderi Silk Kurti",
+  "Temple Border Saree",
 ];
 
 const RECENT_KEY = "vrindav_recent_searches";

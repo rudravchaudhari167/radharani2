@@ -22,6 +22,7 @@ export interface ProductCardProduct {
   sizes?: string[];
   colors?: { name: string; hex: string }[];
   category?: string;
+  description?: string;
   featured?: boolean;
   isNewArrival?: boolean;
 }

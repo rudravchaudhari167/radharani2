@@ -24,17 +24,11 @@ import ProductCard, { type ProductCardProduct } from "@/components/ProductCard";
 /* Constants                                                           */
 /* ------------------------------------------------------------------ */
 
-export const CATEGORIES = [
-  "MEN",
-  "WOMEN",
-  "UNISEX",
-  "KIDS",
-  "ACCESSORIES",
-] as const;
+export const CATEGORIES = ["WOMEN"] as const;
 
 export type Category = (typeof CATEGORIES)[number];
 
-export const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+export const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
 
 export const COLOR_SWATCHES: { name: string; hex: string }[] = [
   { name: "Black", hex: "#111111" },
@@ -61,41 +55,17 @@ export const CATEGORY_HERO: Record<
   Category,
   { name: string; tagline: string; description: string; image: string }
 > = {
-  MEN: {
-    name: "Men",
-    tagline: "Krishna Inspiration",
-    description: "Modern silhouettes shaped by timeless inspiration.",
-    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=1400&auto=format&fit=crop",
-  },
   WOMEN: {
-    name: "Women",
-    tagline: "Radha Inspiration",
-    description: "Graceful forms and ethereal silhouettes inspired by Radha.",
+    name: "Women's Couture",
+    tagline: "Radha Inspiration & Sacred Grace",
+    description: "Graceful forms, ethereal silhouettes, and hand-embroidered silks inspired by the timeless grace of Radha Rani.",
     image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1400&auto=format&fit=crop",
-  },
-  UNISEX: {
-    name: "Unisex",
-    tagline: "Devotional Forms",
-    description: "Versatile, relaxed silhouettes designed to be shared and worn with devotion.",
-    image: "https://images.unsplash.com/photo-1583743814966-8066b5dc11c7?q=80&w=1400&auto=format&fit=crop",
-  },
-  KIDS: {
-    name: "Kids",
-    tagline: "Gentle Devotion",
-    description: "Soft, breathable garments for joyful everyday comfort.",
-    image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=1400&auto=format&fit=crop",
-  },
-  ACCESSORIES: {
-    name: "Accessories",
-    tagline: "Timeless Adornments",
-    description: "Subtle details inspired by timeless sacred symbolism.",
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1400&auto=format&fit=crop",
   },
 };
 
 export function isCategory(value: string | null | undefined): value is Category {
   if (!value) return false;
-  return (CATEGORIES as readonly string[]).includes(value.toUpperCase());
+  return value.toUpperCase() === "WOMEN";
 }
 
 const PAGE_SIZE = 12;
@@ -907,15 +877,15 @@ export default function ShopPageContent({
           {/* Page header */}
           <div className="mb-10">
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.28em] text-[var(--color-accent)]">
-              {showHero ? `${hero?.name} Collection` : "COMPLETE ATELIER CATALOGUE"}
+              {showHero ? `${hero?.name}` : "COMPLETE ATELIER CATALOGUE"}
             </p>
             <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[var(--color-text)]">
-              {showHero && hero ? `${hero.name} Collection` : "All Apparel & Garments"}
+              {showHero && hero ? `${hero.name}` : "Radha Rani Couture Catalogue"}
             </h1>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               {showHero && hero
                 ? hero.description
-                : "Explore our complete collection across Men, Women, Unisex, and Kids apparel."}
+                : "Explore our complete Radha Rani couture collection of sacred silks, embroidered lehengas, and ethereal anarkalis."}
             </p>
           </div>
 

@@ -44,11 +44,7 @@ interface Pagination {
 const inr = (value: number) => `₹${value.toLocaleString("en-IN")}`;
 
 const CATEGORY_BADGE: Record<string, string> = {
-  MEN: "bg-sky-500/15 text-sky-400",
   WOMEN: "bg-pink-500/15 text-pink-400",
-  UNISEX: "bg-violet-500/15 text-violet-400",
-  KIDS: "bg-amber-500/15 text-amber-400",
-  ACCESSORIES: "bg-emerald-500/15 text-emerald-400",
 };
 
 export default function AdminProductsPage() {
@@ -176,23 +172,27 @@ export default function AdminProductsPage() {
           />
         </div>
 
-        {/* Category Pills */}
+        {/* Silhouette Quick Filter Pills */}
         <div className="flex flex-wrap gap-1.5">
-          {["ALL", "MEN", "WOMEN", "UNISEX", "KIDS", "ACCESSORIES"].map((cat) => (
+          {["ALL", "Sarees", "Anarkalis", "Lehengas", "Kurtis", "Dresses"].map((sil) => (
             <button
-              key={cat}
+              key={sil}
               type="button"
               onClick={() => {
-                setCategoryFilter(cat);
+                if (sil === "ALL") {
+                  setSearch("");
+                } else {
+                  setSearch(sil);
+                }
                 setPage(1);
               }}
               className={`rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                categoryFilter === cat
+                (sil === "ALL" && !search) || (search.toLowerCase() === sil.toLowerCase())
                   ? "border-transparent bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-md shadow-[var(--color-primary)]/20"
                   : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:text-white"
               }`}
             >
-              {cat}
+              {sil}
             </button>
           ))}
         </div>
