@@ -24,10 +24,13 @@ interface Product {
   price: number;
   oldPrice?: number;
   category: string;
+  subcategory?: string;
   stock: number;
   sku: string;
   slug: string;
   images: string[];
+  colors?: { name: string; hex: string }[];
+  sizes?: string[];
   isActive: boolean;
   featured: boolean;
 }
@@ -56,6 +59,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -74,6 +78,7 @@ export default function AdminProductsPage() {
           limit: "20",
         });
         if (search.trim()) params.set("search", search.trim());
+        if (categoryFilter !== "ALL") params.set("category", categoryFilter);
         const res = await fetch(`/api/admin/products?${params.toString()}`, {
           credentials: "include",
         });
@@ -112,7 +117,7 @@ export default function AdminProductsPage() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [page, search, reloadKey]);
+  }, [page, search, reloadKey, categoryFilter]);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -154,20 +159,43 @@ export default function AdminProductsPage() {
         </div>
         <Link href="/admin/products/new" className="btn btn-primary">
           <Plus size={16} />
-          Add Product
+          Add Cloth / Product
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6 max-w-md">
-        <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or SKU…"
-          className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 py-2.5 pl-10 pr-4 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-light)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-light)]/40"
-        />
+      {/* Search & Category Filter Pills */}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[240px] flex-1 max-w-md">
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by cloth name or SKU…"
+            className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 py-2.5 pl-10 pr-4 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-light)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-light)]/40"
+          />
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex flex-wrap gap-1.5">
+          {["ALL", "MEN", "WOMEN", "UNISEX", "KIDS", "ACCESSORIES"].map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => {
+                setCategoryFilter(cat);
+                setPage(1);
+              }}
+              className={`rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                categoryFilter === cat
+                  ? "border-transparent bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-md shadow-[var(--color-primary)]/20"
+                  : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:text-white"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -210,7 +238,8 @@ export default function AdminProductsPage() {
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border)] text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                    <th className="px-5 py-4">Product</th>
+                    <th className="px-5 py-4">Cloth & Details</th>
+                    <th className="px-5 py-4">Colors & Sizes</th>
                     <th className="px-5 py-4">Category</th>
                     <th className="px-5 py-4">Price</th>
                     <th className="px-5 py-4">Stock</th>
@@ -242,9 +271,45 @@ export default function AdminProductsPage() {
                               {product.name}
                             </p>
                             <p className="font-mono text-xs text-[var(--color-text-muted)]">
-                              {product.sku}
+                              {product.sku} {product.subcategory ? `• ${product.subcategory}` : ""}
                             </p>
                           </div>
+                        </div>
+                      </td>
+                      {/* Colors & Sizes Preview */}
+                      <td className="px-5 py-3">
+                        <div className="space-y-1.5">
+                          {product.colors && product.colors.length > 0 ? (
+                            <div className="flex items-center gap-1.5">
+                              {product.colors.slice(0, 5).map((col, idx) => (
+                                <span
+                                  key={idx}
+                                  title={`${col.name} (${col.hex})`}
+                                  className="h-4 w-4 rounded-full border border-white/20 shadow-xs"
+                                  style={{ backgroundColor: col.hex }}
+                                />
+                              ))}
+                              {product.colors.length > 5 && (
+                                <span className="text-[10px] text-[var(--color-text-muted)]">
+                                  +{product.colors.length - 5}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-[var(--color-text-muted)]">—</span>
+                          )}
+                          {product.sizes && product.sizes.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {product.sizes.slice(0, 4).map((sz) => (
+                                <span
+                                  key={sz}
+                                  className="rounded border border-[var(--color-border)] px-1 py-0.2 text-[9px] font-bold text-[var(--color-text-muted)]"
+                                >
+                                  {sz}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-5 py-3">

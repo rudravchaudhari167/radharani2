@@ -4,6 +4,7 @@ import {
   comparePassword,
   generateToken,
   setAuthCookie,
+  isAuthorizedAdminEmail,
 } from "@/lib/auth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -97,9 +98,12 @@ export async function POST(request: NextRequest) {
       .eq("email", normalizedEmail)
       .maybeSingle();
 
+    const isAllowedEmail = isAuthorizedAdminEmail(normalizedEmail);
+    const hasAdminRole = user?.role === "ADMIN" || isAllowedEmail;
+
     const isValid =
       !!user &&
-      user.role === "ADMIN" &&
+      hasAdminRole &&
       user.is_active &&
       (await comparePassword(password, user.password_hash || ""));
 
@@ -116,12 +120,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Ensure database role is ADMIN if authorized
+    if (user.role !== "ADMIN" && isAllowedEmail) {
+      await supabase.from("users").update({ role: "ADMIN" }).eq("id", user.id);
+      user.role = "ADMIN";
+    }
+
     failedAttempts.delete(ip);
 
     const token = generateToken({
       _id: user.id,
       email: user.email,
-      role: user.role,
+      role: "ADMIN",
     });
     await setAuthCookie(token);
 

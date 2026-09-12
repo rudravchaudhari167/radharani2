@@ -12,6 +12,7 @@ import {
   ShoppingBag,
   User,
   X,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { useCartStore } from "@/lib/cart-store";
@@ -162,6 +163,17 @@ export default function Navbar() {
             >
               <User size={18} strokeWidth={1.75} />
             </Link>
+
+            {user?.role === "ADMIN" && (
+              <Link
+                href="/admin"
+                className="hidden items-center gap-1.5 rounded-full border border-[var(--color-primary-light)]/40 bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[var(--color-primary-light)] transition-all hover:bg-[var(--color-primary)] hover:text-white lg:inline-flex"
+                aria-label="Admin Panel"
+              >
+                <ShieldCheck size={13} />
+                <span>Admin</span>
+              </Link>
+            )}
 
             <Link
               href="/wishlist"
@@ -325,6 +337,16 @@ export default function Navbar() {
                       <User size={18} className="text-[var(--color-accent)]" />
                       <span className="truncate">{user.name}</span>
                     </Link>
+                    {user?.role === "ADMIN" && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-[var(--color-primary-light)]"
+                      >
+                        <ShieldCheck size={16} />
+                        <span>Admin Panel</span>
+                      </Link>
+                    )}
                     <button
                       type="button"
                       onClick={() => {

@@ -24,6 +24,7 @@ export default function AdminNewProductPage() {
       price: parseFloat(values.price) || 0,
       oldPrice: values.oldPrice !== "" ? parseFloat(values.oldPrice) : undefined,
       category: values.category,
+      subcategory: values.subcategory.trim(),
       stock: parseInt(values.stock || "0", 10) || 0,
       sku: values.sku.trim().toUpperCase(),
       tags: values.tags
@@ -53,7 +54,7 @@ export default function AdminNewProductPage() {
         return;
       }
 
-      addToast("Product created successfully", "success");
+      addToast("Cloth published successfully", "success");
       router.push("/admin/products");
       router.refresh();
     } catch {
@@ -65,14 +66,14 @@ export default function AdminNewProductPage() {
 
   return (
     <AdminLayout active="products">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-6">
           <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-3xl">
             <Package size={26} className="text-[var(--color-primary-light)]" />
-            Add New Product
+            Add New Cloth / Product
           </h1>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Create a new product listing for your store.
+            Create a new apparel listing with colors, sizes, fabric details, and real-time live preview.
           </p>
         </div>
 

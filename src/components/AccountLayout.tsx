@@ -9,6 +9,7 @@ import {
   MapPin,
   Settings,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 
@@ -17,7 +18,7 @@ interface AccountLayoutProps {
   activeKey: string;
 }
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { key: "account", label: "Overview", icon: User, href: "/account" },
   { key: "orders", label: "My Orders", icon: ShoppingBag, href: "/orders" },
   { key: "wishlist", label: "Wishlist", icon: Heart, href: "/wishlist" },
@@ -43,6 +44,14 @@ export default function AccountLayout({ children, activeKey }: AccountLayoutProp
     router.push("/");
   };
 
+  const navItems =
+    user?.role === "ADMIN"
+      ? [
+          ...BASE_NAV_ITEMS,
+          { key: "admin", label: "Admin Panel", icon: ShieldCheck, href: "/admin" },
+        ]
+      : BASE_NAV_ITEMS;
+
   return (
     <div className="min-h-screen bg-[#FAF9F6] pb-28 pt-24 text-[#171717]">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -65,7 +74,7 @@ export default function AccountLayout({ children, activeKey }: AccountLayoutProp
           </div>
           <div className="-mx-4 overflow-x-auto px-4 pt-3">
             <div className="flex gap-2 pb-2">
-              {NAV_ITEMS.map((item) => {
+              {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = activeKey === item.key;
                 return (
@@ -118,7 +127,7 @@ export default function AccountLayout({ children, activeKey }: AccountLayoutProp
 
               {/* Nav links */}
               <nav className="space-y-1 pt-4">
-                {NAV_ITEMS.map((item) => {
+                {navItems.map((item) => {
                   const Icon = item.icon;
                   const active = activeKey === item.key;
                   return (

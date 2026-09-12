@@ -17,6 +17,7 @@ interface Product {
   price: number;
   oldPrice?: number;
   category: string;
+  subcategory?: string;
   stock: number;
   sku: string;
   tags: string[];
@@ -81,6 +82,7 @@ export default function AdminEditProductPage({
       price: parseFloat(values.price) || 0,
       oldPrice: values.oldPrice !== "" ? parseFloat(values.oldPrice) : undefined,
       category: values.category,
+      subcategory: values.subcategory.trim(),
       stock: parseInt(values.stock || "0", 10) || 0,
       sku: values.sku.trim().toUpperCase(),
       tags: values.tags
@@ -122,15 +124,14 @@ export default function AdminEditProductPage({
 
   return (
     <AdminLayout active="products">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-6">
           <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-3xl">
             <Package size={26} className="text-[var(--color-primary-light)]" />
-            Edit Product
+            Edit Cloth / Product
           </h1>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Update product details. Stock is managed via the stock field below —
-            reducing stock here reflects immediately in the store.
+            Update cloth colors, sizes, photos, and prices with instant live preview.
           </p>
         </div>
 

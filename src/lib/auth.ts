@@ -20,6 +20,26 @@ export interface SessionUser {
   role: "USER" | "ADMIN";
 }
 
+export const DEFAULT_ADMIN_EMAILS = [
+  "rudravchaudhari167@gmail.com",
+  "vap1414@gmail.com",
+];
+
+export function getAdminEmails(): string[] {
+  const envEmails = process.env.ADMIN_EMAILS
+    ? process.env.ADMIN_EMAILS.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean)
+    : [];
+  const singleAdmin = process.env.ADMIN_EMAIL ? [process.env.ADMIN_EMAIL.trim().toLowerCase()] : [];
+  const set = new Set([...DEFAULT_ADMIN_EMAILS, ...envEmails, ...singleAdmin]);
+  return Array.from(set);
+}
+
+export function isAuthorizedAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  return getAdminEmails().includes(normalized);
+}
+
 const TOKEN_EXPIRY = "7d";
 
 function getJwtSecret(): string {
@@ -106,12 +126,14 @@ export async function getServerSession(): Promise<SessionUser | null> {
       return null;
     }
 
+    const role = isAuthorizedAdminEmail(user.email) ? "ADMIN" : user.role;
+
     return {
       userId: user.id,
       email: user.email,
       name: user.name,
       phone: user.phone ?? "",
-      role: user.role,
+      role,
     };
   } catch {
     return null;

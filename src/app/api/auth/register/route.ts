@@ -6,6 +6,7 @@ import {
   hashPassword,
   generateToken,
   setAuthCookie,
+  isAuthorizedAdminEmail,
 } from "@/lib/auth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         phone: normalizedPhone,
         password_hash: passwordHash,
-        role: "USER",
+        role: isAuthorizedAdminEmail(normalizedEmail) ? "ADMIN" : "USER",
         is_active: true,
       })
       .select("*")

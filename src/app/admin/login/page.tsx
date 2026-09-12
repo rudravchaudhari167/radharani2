@@ -162,15 +162,34 @@ export default function AdminLoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 noValidate">
-          <Field
-            type="email"
-            label="Admin Email"
-            value={email}
-            onChange={setEmail}
-            placeholder="admin@vrindav.com"
-            autoComplete="email"
-            icon={<Mail size={17} />}
-          />
+          <div>
+            <Field
+              type="email"
+              label="Admin Email"
+              value={email}
+              onChange={setEmail}
+              placeholder="rudravchaudhari167@gmail.com"
+              autoComplete="email"
+              icon={<Mail size={17} />}
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--color-text-muted)]">
+              <span>Quick select:</span>
+              <button
+                type="button"
+                onClick={() => setEmail("rudravchaudhari167@gmail.com")}
+                className="rounded-md border border-[var(--color-border)] bg-white/5 px-2 py-0.5 text-xs text-[var(--color-primary-light)] hover:border-[var(--color-primary-light)]"
+              >
+                rudravchaudhari167@gmail.com
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmail("vap1414@gmail.com")}
+                className="rounded-md border border-[var(--color-border)] bg-white/5 px-2 py-0.5 text-xs text-[var(--color-primary-light)] hover:border-[var(--color-primary-light)]"
+              >
+                vap1414@gmail.com
+              </button>
+            </div>
+          </div>
 
           <Field
             type="password"
