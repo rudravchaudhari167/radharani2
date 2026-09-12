@@ -2,126 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Sparkles,
   ArrowRight,
-  Eye,
-  Heart,
-  ShoppingBag,
   Compass,
   Check,
   Feather,
   Flower2,
   Crown,
   Scroll,
-  Shirt,
 } from "lucide-react";
-import { useWishlistStore } from "@/lib/wishlist-store";
-import { useCartStore } from "@/lib/cart-store";
-import { useToastStore } from "@/lib/toast-store";
 import ProductCard, { type ProductCardProduct } from "@/components/ProductCard";
-
-/* ------------------------------------------------------------------ */
-/* Lookbook Editions Data                                             */
-/* ------------------------------------------------------------------ */
-interface LookbookEdition {
-  id: string;
-  number: string;
-  tag: string;
-  title: string;
-  subtitle: string;
-  story: string;
-  heroImage: string;
-  palette: { name: string; hex: string }[];
-  fabricNote: string;
-  featuredKeyword: string;
-  badge: string;
-}
-
-const LOOKBOOK_EDITIONS: LookbookEdition[] = [
-  {
-    id: "sacred-raas",
-    number: "01",
-    tag: "Sharad Purnima Moonlight",
-    title: "Sacred Raas",
-    subtitle: "The Dance of Celestial Ecstasy",
-    story:
-      "Inspired by the mystical autumn midnight when Radha and Krishna dance under the Vrindavan stars. Flowing kalidar drapes, midnight blues, and luminous gold zari that catches the ambient temple lanterns.",
-    heroImage:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop",
-    palette: [
-      { name: "Yamuna Twilight", hex: "#0f2b48" },
-      { name: "Temple Gold", hex: "#d4a574" },
-      { name: "Peacock Royal", hex: "#0c4a6e" },
-      { name: "Chandra Silver", hex: "#e2e8f0" },
-    ],
-    fabricNote: "Pure Banarasi Katan Silk with hand-loomed gold zari",
-    featuredKeyword: "Anarkali",
-    badge: "Limited Seasonal Edit",
-  },
-  {
-    id: "temple-darshan",
-    number: "02",
-    tag: "Morning Aarti Sanctum",
-    title: "Temple Darshan",
-    subtitle: "Sanctum of Peace & Sacred Grace",
-    story:
-      "Garments woven for morning prayers and peaceful meditation. Pure unbleached kora silks, auspicious vermilion borders, and sandalwood hues crafted to evoke quiet spiritual serenity.",
-    heroImage:
-      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop",
-    palette: [
-      { name: "Vermilion Sindoor", hex: "#be123c" },
-      { name: "Kora Ivory", hex: "#fef3c7" },
-      { name: "Sandalwood", hex: "#d97706" },
-      { name: "Haldi Ochre", hex: "#eab308" },
-    ],
-    fabricNote: "Raw Tussar & Chanderi woven with temple borders",
-    featuredKeyword: "Saree",
-    badge: "Sanctum Series",
-  },
-  {
-    id: "royal-bridal",
-    number: "03",
-    tag: "Heirloom Devotional Haute Couture",
-    title: "Royal Bridal Heritage",
-    subtitle: "The Eternal Radha Bridal Trove",
-    story:
-      "Centuries of artisanal legacy captured in heirloom lehengas. Months of meticulous zardozi needlework, beaten gold thread, and opulent brocades created for sacred marital vows.",
-    heroImage:
-      "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?q=80&w=1200&auto=format&fit=crop",
-    palette: [
-      { name: "Imperial Crimson", hex: "#881337" },
-      { name: "Antique Zari", hex: "#b45309" },
-      { name: "Rani Rose", hex: "#be185d" },
-      { name: "Emerald Velvet", hex: "#064e3b" },
-    ],
-    fabricNote: "Heavy Mulberry Brocade with Hand Zardozi Embroidery",
-    featuredKeyword: "Lehenga",
-    badge: "Masterpiece Heirloom",
-  },
-  {
-    id: "vrinda-petals",
-    number: "04",
-    tag: "Sacred Yamuna Groves",
-    title: "Vrinda Petals",
-    subtitle: "Whispers of the Sacred Groves",
-    story:
-      "Ethereal featherweight organzas and botanical dyes infused with natural temple rose petals and fresh tulsi leaves. Light, breathable luxury for joyful festive celebrations.",
-    heroImage:
-      "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=1200&auto=format&fit=crop",
-    palette: [
-      { name: "Lotus Blush", hex: "#f472b6" },
-      { name: "Sacred Tulsi", hex: "#15803d" },
-      { name: "Dawn Amber", hex: "#fed7aa" },
-      { name: "Kasturi Mist", hex: "#fdf2f8" },
-    ],
-    fabricNote: "Handwoven Organza & Tissue Silk with Scalloped Gota",
-    featuredKeyword: "Kurti",
-    badge: "Botanical Essence",
-  },
-];
 
 /* ------------------------------------------------------------------ */
 /* Couture Silhouettes Cards                                          */
@@ -170,7 +62,7 @@ const SILHOUETTES = [
 /* ------------------------------------------------------------------ */
 const OCCASIONS = [
   { id: "aarti", label: "Morning Temple Aarti", note: "Pure serene ivory & auspicious vermilion" },
-  { id: "festive", label: "Janmashtami & Holi Sangeet", note: "Luminous peacock tones & swirling kalis" },
+  { id: "festive", label: "Janmashtami & Festive Sangeet", note: "Luminous peacock tones & swirling kalis" },
   { id: "wedding", label: "Sacred Wedding Vivaha", note: "Opulent Banarasi zari & royal crimson" },
   { id: "devotion", label: "Daily Devotional Grace", note: "Featherweight Chanderi & wild Tussar" },
 ];
@@ -183,22 +75,21 @@ const FABRICS = [
 ];
 
 export default function CreativeShopExperience() {
-  const [activeEdition, setActiveEdition] = useState<LookbookEdition>(LOOKBOOK_EDITIONS[0]);
   const [selectedOccasion, setSelectedOccasion] = useState(OCCASIONS[0].id);
   const [selectedFabric, setSelectedFabric] = useState(FABRICS[0].id);
-  const [allProducts, setAllProducts] = useState<ProductCardProduct[]>([]);
+  const [products, setProducts] = useState<ProductCardProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load curated garments for the interactive showcases
+  // Load curated garments for the interactive showcase
   useEffect(() => {
     let cancelled = false;
     async function loadCouture() {
       try {
-        const res = await fetch("/api/products?limit=16&category=WOMEN");
+        const res = await fetch("/api/products?limit=8&category=WOMEN");
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled && data.products) {
-          setAllProducts(data.products);
+          setProducts(data.products);
         }
       } catch {
         // graceful fallback
@@ -212,25 +103,13 @@ export default function CreativeShopExperience() {
     };
   }, []);
 
-  // Filter garments that match the active edition's aesthetic
-  const editionProducts = allProducts.filter((p) => {
-    const text = `${p.name} ${p.description || ""}`.toLowerCase();
-    return (
-      text.includes(activeEdition.featuredKeyword.toLowerCase()) ||
-      text.includes(activeEdition.title.toLowerCase())
-    );
-  });
-
-  const displayedProducts =
-    editionProducts.length > 0 ? editionProducts.slice(0, 4) : allProducts.slice(0, 4);
-
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[var(--color-bg)] pb-24 pt-28">
       {/* Subtle Background Glows */}
       <div className="pointer-events-none absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-b from-[var(--color-primary)]/10 via-[var(--color-secondary)]/5 to-transparent blur-[120px]" />
 
       {/* ============================================================ */}
-      {/* HERO SECTION: Editorial Atelier Statement                     */}
+      {/* HERO SECTION: Editorial Statement                           */}
       {/* ============================================================ */}
       <section className="relative mx-auto max-w-[84rem] px-4 pb-16 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
@@ -249,7 +128,7 @@ export default function CreativeShopExperience() {
             transition={{ delay: 0.1 }}
             className="mt-4 font-serif text-4xl font-normal tracking-tight text-[var(--color-text)] sm:text-6xl lg:text-7xl"
           >
-            Radha Rani Lookbook &amp; Atelier
+            Radha Rani Atelier &amp; Boutique
           </motion.h1>
 
           <motion.p
@@ -258,11 +137,11 @@ export default function CreativeShopExperience() {
             transition={{ delay: 0.2 }}
             className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--color-text-muted)] sm:text-lg"
           >
-            An interactive boutique gallery of sacred weaves, royal bridal heritage, and timeless
-            Vrindavan couture. Explore curations designed by mood, occasion, and artisanal provenance.
+            Handcrafted devotional couture, heritage Banarasi silks, and ethereal silhouettes
+            inspired by the timeless grace of Sri Radha. Explore by architectural silhouette,
+            fabric weave, or curated occasions.
           </motion.p>
 
-          {/* Quick Bridge to Technical Women's Catalogue */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -270,17 +149,17 @@ export default function CreativeShopExperience() {
             className="mt-8 flex flex-wrap items-center justify-center gap-4"
           >
             <a
-              href="#lookbooks"
+              href="#silhouettes"
               className="btn btn-primary shadow-lg shadow-[var(--color-primary)]/25"
             >
               <Compass size={16} />
-              Explore Curated Lookbooks
+              Explore Silhouettes
             </a>
             <Link
               href="/shop?view=catalogue"
               className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white/5 px-5 py-3 text-sm font-semibold text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)]/60 hover:bg-white/10"
             >
-              <span>Browse Full Atelier Catalogue (Filters &amp; Sizes)</span>
+              <span>Browse Full Catalogue with Filters</span>
               <ArrowRight size={14} className="text-[var(--color-accent)]" />
             </Link>
           </motion.div>
@@ -288,216 +167,15 @@ export default function CreativeShopExperience() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 1: The Curated Lookbook Editions                      */}
+      {/* SECTION 1: Couture Silhouette Architectural Showcase          */}
       {/* ============================================================ */}
-      <section id="lookbooks" className="relative mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col justify-between gap-4 border-b border-[var(--color-border)] pb-6 md:flex-row md:items-end">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-accent)]">
-              Curated Style Edits
-            </span>
-            <h2 className="mt-1 font-serif text-3xl font-normal text-[var(--color-text)] sm:text-4xl">
-              The Four Sacred Editions
-            </h2>
-          </div>
-          <p className="max-w-md text-xs text-[var(--color-text-muted)]">
-            Select an edition to immerse yourself in its narrative, curated color palette, and
-            harmonious couture ensembles.
-          </p>
-        </div>
-
-        {/* Edition Tabs */}
-        <div className="no-scrollbar mb-10 flex gap-3 overflow-x-auto pb-2">
-          {LOOKBOOK_EDITIONS.map((edition) => {
-            const isSelected = activeEdition.id === edition.id;
-            return (
-              <button
-                key={edition.id}
-                type="button"
-                onClick={() => setActiveEdition(edition)}
-                className={`group relative flex shrink-0 items-center gap-3 rounded-2xl border px-5 py-3.5 text-left transition-all ${
-                  isSelected
-                    ? "border-[var(--color-accent)] bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/15 shadow-md shadow-[var(--color-primary)]/10"
-                    : "border-[var(--color-border)] bg-white/5 hover:border-[var(--color-border)]/80 hover:bg-white/10"
-                }`}
-              >
-                <span
-                  className={`font-mono text-xs font-bold ${
-                    isSelected ? "text-[var(--color-accent)]" : "text-[var(--color-text-muted)]"
-                  }`}
-                >
-                  {edition.number}
-                </span>
-                <div>
-                  <p
-                    className={`text-sm font-semibold tracking-wide ${
-                      isSelected ? "text-white" : "text-[var(--color-text)]"
-                    }`}
-                  >
-                    {edition.title}
-                  </p>
-                  <p className="text-[11px] text-[var(--color-text-muted)]">{edition.tag}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Active Lookbook Editorial Hero Box */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeEdition.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.35 }}
-            className="overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)]/60 backdrop-blur-xl shadow-2xl"
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-12">
-              {/* Left Editorial Narrative (7 cols) */}
-              <div className="flex flex-col justify-between p-8 sm:p-12 lg:col-span-7">
-                <div className="space-y-6">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-[var(--color-accent)]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[var(--color-accent)]">
-                      {activeEdition.badge}
-                    </span>
-                    <span className="text-xs text-[var(--color-text-muted)]">
-                      Edition #{activeEdition.number}
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.25em] text-[var(--color-accent)]">
-                      {activeEdition.tag}
-                    </p>
-                    <h3 className="mt-1 font-serif text-3xl font-normal text-[var(--color-text)] sm:text-5xl">
-                      {activeEdition.subtitle}
-                    </h3>
-                  </div>
-
-                  <p className="text-sm leading-relaxed text-[var(--color-text-muted)] sm:text-base">
-                    &ldquo;{activeEdition.story}&rdquo;
-                  </p>
-
-                  {/* Sacred Color Swatches */}
-                  <div>
-                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                      Sacred Harmony Palette
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3">
-                      {activeEdition.palette.map((swatch) => (
-                        <div
-                          key={swatch.name}
-                          className="flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-black/20 px-3 py-1.5"
-                        >
-                          <span
-                            className="h-4 w-4 rounded-full border border-white/20 shadow-xs"
-                            style={{ backgroundColor: swatch.hex }}
-                          />
-                          <span className="text-xs font-medium text-white/90">{swatch.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Fabric Provenance Note */}
-                  <div className="rounded-2xl border border-[var(--color-border)]/60 bg-white/5 p-4 text-xs text-[var(--color-text-muted)]">
-                    <span className="font-semibold text-white">Weave &amp; Provenance: </span>
-                    {activeEdition.fabricNote}
-                  </div>
-                </div>
-
-                <div className="mt-8 flex flex-wrap items-center gap-4 border-t border-[var(--color-border)] pt-6">
-                  <Link
-                    href={`/shop?search=${encodeURIComponent(activeEdition.featuredKeyword)}`}
-                    className="btn btn-primary"
-                  >
-                    <span>Explore All {activeEdition.title} Pieces</span>
-                    <ArrowRight size={14} />
-                  </Link>
-                  <Link
-                    href="/shop?view=catalogue"
-                    className="text-xs font-semibold text-[var(--color-text-muted)] hover:text-white"
-                  >
-                    View in Full Catalogue &rarr;
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right Lookbook Imagery (5 cols) */}
-              <div className="relative min-h-[380px] lg:col-span-5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={activeEdition.heroImage}
-                  alt={activeEdition.title}
-                  className="h-full w-full object-cover object-center"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 lg:bg-gradient-to-r lg:from-[var(--color-bg-elevated)] lg:via-transparent lg:to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6 rounded-2xl border border-white/15 bg-black/40 p-4 backdrop-blur-md">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
-                    Atelier Spotlight
-                  </p>
-                  <p className="text-sm font-semibold text-white">
-                    Exclusive handloom cut for {activeEdition.title}
-                  </p>
-                  <p className="text-xs text-white/70">Hand-blessed in Vrindavan atelier</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Garments in this Lookbook Style Edit */}
-        <div className="mt-14">
-          <div className="mb-6 flex items-center justify-between">
-            <h4 className="flex items-center gap-2 text-lg font-semibold text-[var(--color-text)]">
-              <Sparkles size={16} className="text-[var(--color-accent)]" />
-              Featured Couture in this Edition
-            </h4>
-            <Link
-              href={`/shop?search=${encodeURIComponent(activeEdition.featuredKeyword)}`}
-              className="text-xs font-semibold text-[var(--color-accent)] hover:underline"
-            >
-              See all in catalogue &rarr;
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="glass-card overflow-hidden">
-                  <div className="skeleton aspect-[4/5] rounded-none" />
-                  <div className="p-4 space-y-2">
-                    <div className="skeleton h-4 w-3/4" />
-                    <div className="skeleton h-3 w-1/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : displayedProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {displayedProducts.map((p, idx) => (
-                <ProductCard key={p._id} product={p} index={idx} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-[var(--color-border)] p-8 text-center text-sm text-[var(--color-text-muted)]">
-              Couture garments currently being catalogued for this season.
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 2: Couture Silhouette Architectural Showcase          */}
-      {/* ============================================================ */}
-      <section className="relative mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8">
+      <section id="silhouettes" className="relative mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-10 text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-accent)]">
             Architectural Forms
           </span>
           <h2 className="mt-1 font-serif text-3xl font-normal text-[var(--color-text)] sm:text-4xl">
-            The Women&apos;s Couture Silhouettes
+            Couture Silhouettes
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-xs text-[var(--color-text-muted)]">
             Each silhouette is an homage to sacred iconography — constructed to drape flatteringly
@@ -553,6 +231,52 @@ export default function CreativeShopExperience() {
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* SECTION 2: Featured Atelier Pieces                            */}
+      {/* ============================================================ */}
+      <section className="relative mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col justify-between gap-4 border-b border-[var(--color-border)] pb-6 md:flex-row md:items-end">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-accent)]">
+              Curated Masterpieces
+            </span>
+            <h2 className="mt-1 font-serif text-3xl font-normal text-[var(--color-text)] sm:text-4xl">
+              Featured Atelier Garments
+            </h2>
+          </div>
+          <Link
+            href="/shop?view=catalogue"
+            className="text-xs font-semibold text-[var(--color-accent)] hover:underline"
+          >
+            Open full catalogue with filters &rarr;
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="glass-card overflow-hidden">
+                <div className="skeleton aspect-[4/5] rounded-none" />
+                <div className="p-4 space-y-2">
+                  <div className="skeleton h-4 w-3/4" />
+                  <div className="skeleton h-3 w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((p, idx) => (
+              <ProductCard key={p._id} product={p} index={idx} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-[var(--color-border)] p-8 text-center text-sm text-[var(--color-text-muted)]">
+            Couture garments are currently being prepared.
+          </div>
+        )}
       </section>
 
       {/* ============================================================ */}
