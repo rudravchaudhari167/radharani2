@@ -7,10 +7,8 @@ import {
   Sparkles,
   ArrowRight,
   Compass,
-  Check,
   Feather,
   Flower2,
-  Crown,
   Scroll,
 } from "lucide-react";
 import ProductCard, { type ProductCardProduct } from "@/components/ProductCard";
@@ -57,26 +55,7 @@ const SILHOUETTES = [
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/* Interactive Ensemble Matcher Options                                */
-/* ------------------------------------------------------------------ */
-const OCCASIONS = [
-  { id: "aarti", label: "Morning Temple Aarti", note: "Pure serene ivory & auspicious vermilion" },
-  { id: "festive", label: "Janmashtami & Festive Sangeet", note: "Luminous peacock tones & swirling kalis" },
-  { id: "wedding", label: "Sacred Wedding Vivaha", note: "Opulent Banarasi zari & royal crimson" },
-  { id: "devotion", label: "Daily Devotional Grace", note: "Featherweight Chanderi & wild Tussar" },
-];
-
-const FABRICS = [
-  { id: "katan", label: "Banarasi Katan Silk", icon: Crown },
-  { id: "chanderi", label: "Featherweight Chanderi", icon: Feather },
-  { id: "organza", label: "Botanical Silk Organza", icon: Flower2 },
-  { id: "tussar", label: "Raw Ahimsa Tussar", icon: Scroll },
-];
-
 export default function CreativeShopExperience() {
-  const [selectedOccasion, setSelectedOccasion] = useState(OCCASIONS[0].id);
-  const [selectedFabric, setSelectedFabric] = useState(FABRICS[0].id);
   const [products, setProducts] = useState<ProductCardProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -138,8 +117,8 @@ export default function CreativeShopExperience() {
             className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--color-text-muted)] sm:text-lg"
           >
             Handcrafted devotional couture, heritage Banarasi silks, and ethereal silhouettes
-            inspired by the timeless grace of Sri Radha. Explore by architectural silhouette,
-            fabric weave, or curated occasions.
+            inspired by the timeless grace of Sri Radha. Explore by architectural silhouette or
+            curated seasonal weaves.
           </motion.p>
 
           <motion.div
@@ -280,141 +259,7 @@ export default function CreativeShopExperience() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 3: Interactive Darshan Ensemble Matcher              */}
-      {/* ============================================================ */}
-      <section className="relative mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)]/15 via-[var(--color-bg-elevated)] to-black/80 p-8 sm:p-12 lg:p-16">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[var(--color-accent)]/10 blur-[100px]" />
-
-          <div className="max-w-2xl">
-            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-accent)]">
-              Interactive Stylist
-            </span>
-            <h2 className="mt-1 font-serif text-3xl font-normal text-white sm:text-4xl">
-              Curate Your Darshan Ensemble
-            </h2>
-            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-              Select your divine occasion and preferred weave to discover the ideal harmonized look.
-            </p>
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-12">
-            {/* Controls (7 cols) */}
-            <div className="space-y-8 lg:col-span-7">
-              {/* 1. Occasion */}
-              <div>
-                <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                  Step 1: Choose Your Sacred Occasion
-                </label>
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  {OCCASIONS.map((occ) => {
-                    const isSelected = selectedOccasion === occ.id;
-                    return (
-                      <button
-                        key={occ.id}
-                        type="button"
-                        onClick={() => setSelectedOccasion(occ.id)}
-                        className={`rounded-xl border p-3.5 text-left transition-all ${
-                          isSelected
-                            ? "border-[var(--color-accent)] bg-[var(--color-accent)]/15 text-white"
-                            : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold">{occ.label}</p>
-                          {isSelected && <Check size={14} className="text-[var(--color-accent)]" />}
-                        </div>
-                        <p className="mt-1 text-[11px] opacity-75">{occ.note}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 2. Fabric Weave */}
-              <div>
-                <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                  Step 2: Choose Your Fabric Weave
-                </label>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                  {FABRICS.map((fab) => {
-                    const isSelected = selectedFabric === fab.id;
-                    const Icon = fab.icon;
-                    return (
-                      <button
-                        key={fab.id}
-                        type="button"
-                        onClick={() => setSelectedFabric(fab.id)}
-                        className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-center transition-all ${
-                          isSelected
-                            ? "border-[var(--color-accent)] bg-[var(--color-accent)]/15 text-white"
-                            : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        <Icon size={18} className={isSelected ? "text-[var(--color-accent)]" : ""} />
-                        <span className="text-[11px] font-semibold">{fab.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Stylist Recommendation Card (5 cols) */}
-            <div className="flex flex-col justify-between rounded-2xl border border-[var(--color-accent)]/40 bg-black/40 p-6 backdrop-blur-md lg:col-span-5">
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-[var(--color-accent)]/20 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-accent)]">
-                    Atelier Recommendation
-                  </span>
-                  <Sparkles size={16} className="text-[var(--color-accent)]" />
-                </div>
-
-                <h4 className="mt-4 font-serif text-xl font-normal text-white">
-                  {OCCASIONS.find((o) => o.id === selectedOccasion)?.label} Edit
-                </h4>
-
-                <p className="mt-3 text-xs leading-relaxed text-[var(--color-text-muted)]">
-                  For this devotional setting, we recommend pairing our{" "}
-                  <strong className="text-white">
-                    {FABRICS.find((f) => f.id === selectedFabric)?.label}
-                  </strong>{" "}
-                  with antique brass jhumkas, a lotus blossom in the hair, and our scalloped zardozi
-                  dupatta drape.
-                </p>
-
-                <div className="mt-6 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3.5 text-xs text-white/90">
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Drape Style:</span>
-                    <span className="font-semibold">Traditional Seedha Pallu</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Recommended Footwear:</span>
-                    <span className="font-semibold">Hand-embroidered Mojaris</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Fragrance Accord:</span>
-                    <span className="font-semibold">Natural Kasturi &amp; Sandal</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-white/10">
-                <Link
-                  href="/shop?view=catalogue"
-                  className="btn btn-primary w-full justify-center text-xs"
-                >
-                  <span>Shop Matching Atelier Garments</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 4: Artisan Provenance & Ethical Pillars               */}
+      {/* SECTION 3: Artisan Provenance & Ethical Pillars               */}
       {/* ============================================================ */}
       <section className="relative mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -460,7 +305,7 @@ export default function CreativeShopExperience() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 5: Elegant Footer Banner Bridge to Catalogue         */}
+      {/* SECTION 4: Elegant Footer Banner Bridge to Catalogue         */}
       {/* ============================================================ */}
       <section className="relative mx-auto max-w-[84rem] px-4 pt-10 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-[var(--color-border)] bg-gradient-to-r from-black/80 via-white/5 to-black/80 p-8 text-center sm:flex-row sm:text-left">
