@@ -28,7 +28,7 @@ const CHAPTERS: CollectionChapter[] = [
     image:
       "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop",
     palette: ["#FAF7F2", "#E8D8C8", "#D4A574", "#B8965A"],
-    href: "/shop/women",
+    href: "/shop?search=saree",
     highlights: ["Hand-embroidered Zardozi", "Pure Mulberry Silks", "Featherlight Drapes"],
   },
   {
@@ -41,7 +41,7 @@ const CHAPTERS: CollectionChapter[] = [
     image:
       "https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=1200&auto=format&fit=crop",
     palette: ["#1D3048", "#2D4A6B", "#D4AF37", "#6D1A7A"],
-    href: "/shop/women",
+    href: "/shop?search=anarkali",
     highlights: ["Intricate Bodice Zardozi", "Pure Mulberry Silks & Chiffon", "Graceful Twirls & Drapes"],
   },
   {
@@ -54,7 +54,7 @@ const CHAPTERS: CollectionChapter[] = [
     image:
       "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1200&auto=format&fit=crop",
     palette: ["#C5A059", "#EFEFE8", "#2E5E3D", "#997B66"],
-    href: "/shop/women",
+    href: "/shop?search=dress",
     highlights: ["Pure Mul Mul Cottons", "Hand-painted Lotus Motifs", "Fluid Satin Touch"],
   },
   {
@@ -67,7 +67,7 @@ const CHAPTERS: CollectionChapter[] = [
     image:
       "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1200&auto=format&fit=crop",
     palette: ["#800020", "#004D40", "#D4AF37", "#4A0E17"],
-    href: "/shop/women",
+    href: "/shop?search=lehenga",
     highlights: ["Banarasi Zari Weaves", "Occasion Wear Elegance", "Limited Seasonal Runs"],
   },
 ];

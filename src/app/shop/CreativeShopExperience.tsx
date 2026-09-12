@@ -134,7 +134,7 @@ const SILHOUETTES = [
     image:
       "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop",
     tag: "Saree",
-    href: "/shop/women?search=saree",
+    href: "/shop?search=saree",
   },
   {
     title: "The Kalidar Anarkali Suit",
@@ -143,7 +143,7 @@ const SILHOUETTES = [
     image:
       "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop",
     tag: "Anarkali",
-    href: "/shop/women?search=anarkali",
+    href: "/shop?search=anarkali",
   },
   {
     title: "The Heirloom Devotional Lehenga",
@@ -152,7 +152,7 @@ const SILHOUETTES = [
     image:
       "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?q=80&w=800&auto=format&fit=crop",
     tag: "Lehenga",
-    href: "/shop/women?search=lehenga",
+    href: "/shop?search=lehenga",
   },
   {
     title: "The Chanderi & Tussar Kurti",
@@ -161,7 +161,7 @@ const SILHOUETTES = [
     image:
       "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=800&auto=format&fit=crop",
     tag: "Kurti",
-    href: "/shop/women?search=kurti",
+    href: "/shop?search=kurti",
   },
 ];
 
@@ -277,10 +277,10 @@ export default function CreativeShopExperience() {
               Explore Curated Lookbooks
             </a>
             <Link
-              href="/shop/women"
+              href="/shop?view=catalogue"
               className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white/5 px-5 py-3 text-sm font-semibold text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)]/60 hover:bg-white/10"
             >
-              <span>Browse Direct Women&apos;s Catalogue (Filters &amp; Sizes)</span>
+              <span>Browse Full Atelier Catalogue (Filters &amp; Sizes)</span>
               <ArrowRight size={14} className="text-[var(--color-accent)]" />
             </Link>
           </motion.div>
@@ -409,17 +409,17 @@ export default function CreativeShopExperience() {
 
                 <div className="mt-8 flex flex-wrap items-center gap-4 border-t border-[var(--color-border)] pt-6">
                   <Link
-                    href={`/shop/women?search=${encodeURIComponent(activeEdition.featuredKeyword)}`}
+                    href={`/shop?search=${encodeURIComponent(activeEdition.featuredKeyword)}`}
                     className="btn btn-primary"
                   >
                     <span>Explore All {activeEdition.title} Pieces</span>
                     <ArrowRight size={14} />
                   </Link>
                   <Link
-                    href="/shop/women"
+                    href="/shop?view=catalogue"
                     className="text-xs font-semibold text-[var(--color-text-muted)] hover:text-white"
                   >
-                    View in Women&apos;s Catalogue &rarr;
+                    View in Full Catalogue &rarr;
                   </Link>
                 </div>
               </div>
@@ -455,7 +455,7 @@ export default function CreativeShopExperience() {
               Featured Couture in this Edition
             </h4>
             <Link
-              href={`/shop/women?search=${encodeURIComponent(activeEdition.featuredKeyword)}`}
+              href={`/shop?search=${encodeURIComponent(activeEdition.featuredKeyword)}`}
               className="text-xs font-semibold text-[var(--color-accent)] hover:underline"
             >
               See all in catalogue &rarr;
@@ -677,10 +677,10 @@ export default function CreativeShopExperience() {
 
               <div className="mt-6 pt-4 border-t border-white/10">
                 <Link
-                  href="/shop/women"
+                  href="/shop?view=catalogue"
                   className="btn btn-primary w-full justify-center text-xs"
                 >
-                  <span>Shop Matching Women&apos;s Garments</span>
+                  <span>Shop Matching Atelier Garments</span>
                   <ArrowRight size={14} />
                 </Link>
               </div>
@@ -736,7 +736,7 @@ export default function CreativeShopExperience() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 5: Elegant Footer Banner Bridge to Women's Catalogue  */}
+      {/* SECTION 5: Elegant Footer Banner Bridge to Catalogue         */}
       {/* ============================================================ */}
       <section className="relative mx-auto max-w-[84rem] px-4 pt-10 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-[var(--color-border)] bg-gradient-to-r from-black/80 via-white/5 to-black/80 p-8 text-center sm:flex-row sm:text-left">
@@ -745,15 +745,15 @@ export default function CreativeShopExperience() {
               Ready to filter by Size, Price &amp; Color?
             </h3>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              Explore the full Radha Rani Women&apos;s Catalogue with live filters, stock status, and
+              Explore the full Radha Rani Couture Catalogue with live filters, stock status, and
               instant checkout.
             </p>
           </div>
           <Link
-            href="/shop/women"
+            href="/shop?view=catalogue"
             className="btn btn-primary shrink-0 shadow-lg shadow-[var(--color-primary)]/20"
           >
-            <span>Open Women&apos;s Catalogue</span>
+            <span>Open Full Catalogue</span>
             <ArrowRight size={15} />
           </Link>
         </div>

@@ -20,7 +20,15 @@ function ShopInner({
 
   // If explicitly queried with category or search query params, render the filtered catalogue view;
   // Otherwise, render the unique creative lookbook boutique experience!
-  const hasSpecificQuery = Boolean(params.search || params.size || params.color || params.minPrice || params.maxPrice);
+  const hasSpecificQuery = Boolean(
+    params.search ||
+      params.size ||
+      params.color ||
+      params.minPrice ||
+      params.maxPrice ||
+      params.view === "catalogue" ||
+      params.sort
+  );
 
   if (hasSpecificQuery) {
     return (
