@@ -255,6 +255,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                                 src={item.images[0]}
                                 alt={item.name}
                                 fill
+                                unoptimized
                                 sizes="48px"
                                 className="object-cover object-center"
                               />

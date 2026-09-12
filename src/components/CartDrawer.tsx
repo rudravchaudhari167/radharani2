@@ -166,6 +166,7 @@ export default function CartDrawer() {
                           src={item.image}
                           alt={item.name}
                           fill
+                          unoptimized
                           sizes="80px"
                           className="object-cover object-center"
                         />

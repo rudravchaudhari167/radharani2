@@ -317,6 +317,7 @@ function ProductPageContent({ params }: { params: ProductParams }) {
                       src={img}
                       alt={`${product.name} angle ${idx + 1}`}
                       fill
+                      unoptimized
                       sizes="80px"
                       className="object-cover object-center"
                     />
@@ -332,6 +333,7 @@ function ProductPageContent({ params }: { params: ProductParams }) {
                   src={currentImage}
                   alt={product.name}
                   fill
+                  unoptimized
                   priority
                   sizes="(max-width: 1024px) 100vw, 55vw"
                   className="object-cover object-center transition-transform duration-500 hover:scale-105"

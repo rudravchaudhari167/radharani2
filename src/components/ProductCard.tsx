@@ -122,6 +122,7 @@ export default function ProductCard({
                 src={primaryImage}
                 alt={product.name}
                 fill
+                unoptimized
                 priority={eager}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className={`object-cover object-center transition-all duration-500 ease-out group-hover:scale-[1.03] ${
@@ -137,6 +138,7 @@ export default function ProductCard({
                   src={secondaryImage}
                   alt={`${product.name} alternate angle`}
                   fill
+                  unoptimized
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className={`object-cover object-center transition-all duration-500 ease-out group-hover:scale-[1.03] ${
                     hovered ? "opacity-100" : "opacity-0"

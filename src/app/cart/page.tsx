@@ -210,6 +210,7 @@ export default function CartPage() {
                           src={item.image}
                           alt={item.name}
                           fill
+                          unoptimized
                           sizes="120px"
                           className="object-cover object-center"
                         />
