@@ -242,7 +242,7 @@ interface FiltersPanelProps {
   onInStockChange: (value: boolean) => void;
   activeFilterCount: number;
   onClearAll: () => void;
-  onCategorySelect: (category: Category) => void;
+  onCategorySelect: (category: Category | null) => void;
 }
 
 function FilterSectionTitle({ children }: { children: React.ReactNode }) {
@@ -284,22 +284,46 @@ function FiltersPanel({
 
       {/* Categories */}
       <div>
-        <FilterSectionTitle>Categories</FilterSectionTitle>
+        <FilterSectionTitle>Department & Collections</FilterSectionTitle>
         <div className="space-y-1">
           <button
             type="button"
-            onClick={() => {
-              if (activeCategory === null) return;
-              onCategorySelect(activeCategory);
-            }}
-            className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
+            onClick={() => onCategorySelect(null)}
+            className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+              activeCategory === null
+                ? "bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
+                : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
+            }`}
           >
             <span className="flex items-center gap-2">
               <Feather size={14} className="shrink-0" />
               All Garments
             </span>
-            <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
+            {activeCategory === null && (
+              <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
+            )}
           </button>
+
+          {CATEGORIES.map((cat) => {
+            const isSelected = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => onCategorySelect(cat)}
+                className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  isSelected
+                    ? "bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
+                    : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
+                }`}
+              >
+                <span className="capitalize">{cat.toLowerCase()}</span>
+                {isSelected && (
+                  <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -657,7 +681,9 @@ export default function ShopPageContent({
   const serverParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set("limit", "50");
-    params.set("category", activeCategory || "WOMEN");
+    if (activeCategory) {
+      params.set("category", activeCategory);
+    }
     const min = priceRange.min.trim();
     const max = priceRange.max.trim();
     if (min) params.set("minPrice", min);
@@ -774,7 +800,11 @@ export default function ShopPageContent({
   }, []);
 
   const handleCategorySelect = useCallback(
-    (category: Category) => {
+    (category: Category | null) => {
+      if (!category) {
+        router.push("/shop");
+        return;
+      }
       if (fixedCategory) {
         if (category === activeCategory) {
           router.push("/shop");
@@ -877,15 +907,15 @@ export default function ShopPageContent({
           {/* Page header */}
           <div className="mb-10">
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.28em] text-[var(--color-accent)]">
-              {showHero ? `${hero?.name} Collection` : "RADHA RANI COLLECTION"}
+              {showHero ? `${hero?.name} Collection` : "COMPLETE ATELIER CATALOGUE"}
             </p>
             <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[var(--color-text)]">
-              {showHero && hero ? `${hero.name}` : "SHOP"}
+              {showHero && hero ? `${hero.name} Collection` : "All Apparel & Garments"}
             </h1>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               {showHero && hero
                 ? hero.description
-                : "Explore the Radha Rani catalog."}
+                : "Explore our complete collection across Men, Women, Unisex, and Kids apparel."}
             </p>
           </div>
 

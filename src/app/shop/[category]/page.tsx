@@ -1,22 +1,12 @@
 "use client";
 
 import { Suspense, use } from "react";
-import { redirect } from "next/navigation";
 import ShopPageContent from "../ShopPageContent";
 
 type CategoryParams = Promise<{ category: string }>;
 
 function CategoryInner({ params }: { params: CategoryParams }) {
   const { category } = use(params);
-  const normalized = category?.toLowerCase();
-  if (
-    normalized === "men" ||
-    normalized === "accessories" ||
-    normalized === "unisex" ||
-    normalized === "kids"
-  ) {
-    redirect("/shop/women");
-  }
   return <ShopPageContent presetCategory={category} fixedCategory />;
 }
 
