@@ -234,21 +234,29 @@ export async function DELETE(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    await supabase
+    const { error: deleteError } = await supabase
       .from("products")
-      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .delete()
       .eq("id", id);
+
+    if (deleteError) {
+      console.warn("Hard delete failed, falling back to soft delete:", deleteError);
+      await supabase
+        .from("products")
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq("id", id);
+    }
 
     await logAdminAction(
       supabase,
       { userId: session.userId, email: session.email },
-      "PRODUCT_SOFT_DELETED",
+      "PRODUCT_DELETED",
       `Product:${id}`,
       { name: product.name, slug: product.slug },
       getClientIp(request)
     );
 
-    return NextResponse.json({ message: "Product deactivated successfully" });
+    return NextResponse.json({ message: "Product deleted successfully" });
   } catch (error) {
     console.error("Error in DELETE /api/admin/products/[id]:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

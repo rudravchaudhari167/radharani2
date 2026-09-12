@@ -64,7 +64,11 @@ export async function GET(request: NextRequest) {
       query = query.eq("category", category);
     }
     if (isActive !== null && isActive !== undefined) {
-      query = query.eq("is_active", isActive === "true");
+      if (isActive !== "all") {
+        query = query.eq("is_active", isActive === "true");
+      }
+    } else {
+      query = query.eq("is_active", true);
     }
     if (search) {
       query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);

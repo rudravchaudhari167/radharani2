@@ -117,9 +117,10 @@ export default function AdminProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
+    const targetId = deleteTarget._id;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/products/${deleteTarget._id}`, {
+      const res = await fetch(`/api/admin/products/${targetId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -128,8 +129,10 @@ export default function AdminProductsPage() {
         addToast(data.error || "Could not delete product.", "error");
         return;
       }
-      addToast("Product deleted successfully", "success");
+      // Immediately remove from current state
+      setProducts((prev) => prev.filter((p) => p._id !== targetId));
       setDeleteTarget(null);
+      addToast("Product deleted successfully", "success");
       setReloadKey((k) => k + 1);
     } catch {
       addToast("Network error. Could not delete product.", "error");
