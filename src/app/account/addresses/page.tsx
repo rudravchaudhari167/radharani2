@@ -129,7 +129,7 @@ function AddressFormModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
       onClick={onClose}
     >
       <motion.div
@@ -137,22 +137,22 @@ function AddressFormModal({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
-        className="glass-card w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 sm:p-8"
+        className="relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-2xl text-[var(--color-text)] sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-6 flex items-center justify-between">
-          <h3 className="text-lg font-bold">{editMode ? "Edit Address" : "Add New Address"}</h3>
+        <div className="mb-6 flex items-center justify-between border-b border-[var(--color-border)] pb-4">
+          <h3 className="text-lg font-bold text-[var(--color-text)]">{editMode ? "Edit Address" : "Add New Address"}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-[var(--color-text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--color-text)]"
+            className="rounded-full p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
           >
             <X size={18} />
           </button>
         </div>
 
         {errors && (
-          <div className="mb-4 rounded-xl border border-[var(--color-secondary)]/30 bg-[var(--color-secondary)]/10 px-4 py-3 text-sm text-[var(--color-secondary)]">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {errors}
           </div>
         )}
@@ -167,7 +167,7 @@ function AddressFormModal({
                 type="text"
                 value={form.fullName}
                 onChange={(e) => update("fullName", e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                 placeholder="Full name"
               />
             </div>
@@ -179,7 +179,7 @@ function AddressFormModal({
                 type="tel"
                 value={form.phone}
                 onChange={(e) => update("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                 placeholder="10-digit phone"
               />
             </div>
@@ -193,7 +193,7 @@ function AddressFormModal({
               type="email"
               value={form.email || ""}
               onChange={(e) => update("email", e.target.value)}
-              className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
               placeholder="Email (optional)"
             />
           </div>
@@ -206,7 +206,7 @@ function AddressFormModal({
               type="text"
               value={form.addressLine1}
               onChange={(e) => update("addressLine1", e.target.value)}
-              className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
               placeholder="House no., Street, Area"
             />
           </div>
@@ -219,7 +219,7 @@ function AddressFormModal({
               type="text"
               value={form.addressLine2 || ""}
               onChange={(e) => update("addressLine2", e.target.value)}
-              className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
               placeholder="Landmark, Colony (optional)"
             />
           </div>
@@ -233,7 +233,7 @@ function AddressFormModal({
                 type="text"
                 value={form.city}
                 onChange={(e) => update("city", e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                 placeholder="City"
               />
             </div>
@@ -245,7 +245,7 @@ function AddressFormModal({
                 type="text"
                 value={form.state}
                 onChange={(e) => update("state", e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                 placeholder="State"
               />
             </div>
@@ -260,7 +260,7 @@ function AddressFormModal({
                 type="text"
                 value={form.pincode}
                 onChange={(e) => update("pincode", e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                 placeholder="6-digit pincode"
               />
             </div>
@@ -272,7 +272,7 @@ function AddressFormModal({
                 type="text"
                 value={form.landmark || ""}
                 onChange={(e) => update("landmark", e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:bg-white focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                 placeholder="Near ... (optional)"
               />
             </div>
@@ -291,10 +291,10 @@ function AddressFormModal({
                       key={t}
                       type="button"
                       onClick={() => update("type", t)}
-                      className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-all ${
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition-all ${
                         form.type === t
-                          ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white"
-                          : "border border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                          ? "bg-[#2D4A6B] text-white shadow-xs"
+                          : "border border-[var(--color-border)] bg-white text-[var(--color-text)] hover:border-[#2D4A6B]"
                       }`}
                     >
                       <Icon size={12} />
@@ -310,22 +310,22 @@ function AddressFormModal({
             <div
               className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all ${
                 form.isDefault
-                  ? "border-[var(--color-primary)] bg-[var(--color-primary)]"
-                  : "border-[var(--color-border)] bg-white/5"
+                  ? "border-[#2D4A6B] bg-[#2D4A6B]"
+                  : "border-[var(--color-border)] bg-white"
               }`}
               onClick={() => update("isDefault", !form.isDefault)}
             >
               {form.isDefault && <Check size={12} className="text-white" />}
             </div>
-            <span className="text-[var(--color-text-muted)]">Set as default address</span>
+            <span className="text-[var(--color-text)]">Set as default address</span>
           </label>
         </div>
 
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex gap-3 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="btn btn-ghost flex-1"
+            className="flex-1 rounded-xl border border-[var(--color-border)] bg-white py-2.5 text-sm font-medium text-[#666666] transition-colors hover:bg-[#FAF9F6] hover:text-[#171717]"
           >
             Cancel
           </button>
@@ -333,7 +333,7 @@ function AddressFormModal({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="btn btn-primary flex-1"
+            className="flex-1 rounded-xl bg-[#2D4A6B] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#3D5A7B] disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {saving ? (
               <LoaderCircle size={16} className="animate-spin" />
@@ -362,32 +362,36 @@ function ConfirmDelete({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
       onClick={onCancel}
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="glass-card w-full max-w-sm p-6 text-center"
+        className="relative w-full max-w-sm rounded-2xl border border-[var(--color-border)] bg-white p-6 text-center shadow-2xl text-[var(--color-text)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-secondary)]/15">
-          <Trash2 size={24} className="text-[var(--color-secondary)]" />
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-600">
+          <Trash2 size={24} />
         </div>
-        <h3 className="text-lg font-bold">Delete Address?</h3>
+        <h3 className="text-lg font-bold text-[var(--color-text)]">Delete Address?</h3>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">
           This action cannot be undone.
         </p>
         <div className="mt-6 flex gap-3">
-          <button type="button" onClick={onCancel} className="btn btn-ghost flex-1">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 rounded-xl border border-[var(--color-border)] bg-white py-2.5 text-sm font-medium text-[#666666] transition-colors hover:bg-[#FAF9F6] hover:text-[#171717]"
+          >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
             disabled={deleting}
-            className="btn flex-1 border-[var(--color-secondary)]/40 bg-[var(--color-secondary)]/15 text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/25"
+            className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {deleting ? <LoaderCircle size={16} className="animate-spin" /> : <Trash2 size={16} />}
             Delete

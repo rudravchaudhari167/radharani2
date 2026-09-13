@@ -165,7 +165,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-3.5 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-light)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-light)]/40 transition-colors";
+  "w-full rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] px-3.5 py-2.5 text-sm text-[#171717] placeholder:text-[#999999] focus:bg-white focus:border-[#2D4A6B] focus:outline-none focus:ring-1 focus:ring-[#2D4A6B]/30 transition-colors";
 
 export default function ProductForm({
   mode,
@@ -455,7 +455,7 @@ export default function ProductForm({
                     <button
                       type="button"
                       onClick={() => setCustomSubcategory(false)}
-                      className="rounded-xl border border-[var(--color-border)] px-3 text-xs text-[var(--color-text-muted)] hover:text-white"
+                      className="rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] px-3 text-xs text-[#666666] hover:text-[#171717] hover:border-[#171717]"
                     >
                       Presets
                     </button>
@@ -518,7 +518,7 @@ export default function ProductForm({
                           addToast(`Added "${fabric}" to tags`, "info");
                         }
                       }}
-                      className="rounded-lg border border-[var(--color-border)] bg-white/5 px-2.5 py-1 text-xs text-[var(--color-text-muted)] hover:border-[var(--color-primary-light)] hover:text-white"
+                      className="rounded-lg border border-[#E7E3DC] bg-[#FAF9F6] px-2.5 py-1 text-xs text-[#666666] hover:border-[#2D4A6B] hover:text-[#2D4A6B] hover:bg-white"
                     >
                       + {fabric}
                     </button>
@@ -611,7 +611,7 @@ export default function ProductForm({
                   <button
                     type="button"
                     onClick={autoGenerateSku}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-white/5 px-3 text-xs font-semibold text-[var(--color-text)] transition-colors hover:border-[var(--color-primary-light)] hover:text-white"
+                    className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] px-3 text-xs font-semibold text-[#171717] transition-colors hover:border-[#2D4A6B] hover:text-[#2D4A6B] hover:bg-white"
                   >
                     <RefreshCw size={14} />
                     Generate
@@ -694,8 +694,8 @@ export default function ProductForm({
                       disabled={alreadyAdded}
                       className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
                         alreadyAdded
-                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 opacity-60 cursor-default"
-                          : "border-[var(--color-border)] bg-white/5 text-[var(--color-text)] hover:border-white/30"
+                          ? "border-emerald-500/40 bg-emerald-50 text-emerald-700 opacity-60 cursor-default"
+                          : "border-[#E7E3DC] bg-[#FAF9F6] text-[#171717] hover:border-[#2D4A6B] hover:bg-white"
                       }`}
                     >
                       <span
@@ -711,7 +711,7 @@ export default function ProductForm({
             </div>
 
             {/* Custom Color Input */}
-            <div className="flex flex-wrap items-end gap-3 rounded-xl border border-[var(--color-border)] bg-white/5 p-3.5">
+            <div className="flex flex-wrap items-end gap-3 rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] p-3.5">
               <div className="min-w-[140px] flex-1">
                 <label className="mb-1 block text-xs font-semibold text-[var(--color-text-muted)]">
                   Custom Color Name
@@ -789,8 +789,8 @@ export default function ProductForm({
                     aria-pressed={active}
                     className={`flex items-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-bold transition-all ${
                       active
-                        ? "border-transparent bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-md shadow-[var(--color-primary)]/20 scale-105"
-                        : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:border-white/20 hover:text-white"
+                        ? "border-transparent bg-[#2D4A6B] text-white shadow-sm scale-105"
+                        : "border-[#E7E3DC] bg-[#FAF9F6] text-[#666666] hover:border-[#2D4A6B] hover:text-[#171717] hover:bg-white"
                     }`}
                   >
                     {active && <Check size={14} />}
@@ -979,7 +979,7 @@ export default function ProductForm({
               </Field>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2">
-                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white/5 p-4 transition-colors hover:border-white/20">
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] p-4 transition-colors hover:border-[#2D4A6B] hover:bg-white">
                   <input
                     type="checkbox"
                     checked={values.featured}
@@ -987,14 +987,14 @@ export default function ProductForm({
                     className="h-5 w-5 rounded accent-[var(--color-primary)]"
                   />
                   <div>
-                    <p className="text-sm font-bold text-white">Featured / Bestseller</p>
+                    <p className="text-sm font-bold text-[#171717]">Featured / Bestseller</p>
                     <p className="text-xs text-[var(--color-text-muted)]">
                       Show in homepage highlights & bestsellers
                     </p>
                   </div>
                 </label>
 
-                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white/5 p-4 transition-colors hover:border-white/20">
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] p-4 transition-colors hover:border-[#2D4A6B] hover:bg-white">
                   <input
                     type="checkbox"
                     checked={values.isNewArrival}
@@ -1002,9 +1002,9 @@ export default function ProductForm({
                     className="h-5 w-5 rounded accent-[var(--color-primary)]"
                   />
                   <div>
-                    <p className="text-sm font-bold text-white">New Drop (New Arrival)</p>
+                    <span className="text-sm font-semibold text-[#171717]">Mark as New Arrival</span>
                     <p className="text-xs text-[var(--color-text-muted)]">
-                      Show &apos;NEW&apos; badge in the shop catalogue
+                      Featured in the &ldquo;New In Atelier&rdquo; drop
                     </p>
                   </div>
                 </label>
@@ -1049,7 +1049,7 @@ export default function ProductForm({
             <button
               type="button"
               onClick={() => router.push("/admin/products")}
-              className="btn btn-ghost h-12 rounded-2xl px-6 text-sm font-semibold text-[var(--color-text-muted)] hover:text-white"
+              className="btn btn-ghost h-12 rounded-2xl px-6 text-sm font-semibold text-[#666666] hover:text-[#171717] hover:bg-[#FAF9F6]"
             >
               Cancel
             </button>

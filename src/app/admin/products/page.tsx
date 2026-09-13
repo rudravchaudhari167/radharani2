@@ -191,8 +191,8 @@ export default function AdminProductsPage() {
               }}
               className={`rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
                 (sil === "ALL" && !search) || (search.toLowerCase() === sil.toLowerCase())
-                  ? "border-transparent bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-md shadow-[var(--color-primary)]/20"
-                  : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:text-white"
+                  ? "border-transparent bg-[#2D4A6B] text-white shadow-sm"
+                  : "border-[#E7E3DC] bg-white text-[#666666] hover:border-[#2D4A6B] hover:text-[#171717]"
               }`}
             >
               {sil}
@@ -418,7 +418,7 @@ export default function AdminProductsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
             onClick={() => !deleting && setDeleteTarget(null)}
           >
             <motion.div
@@ -426,16 +426,16 @@ export default function AdminProductsPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}
-              className="glass-card w-full max-w-sm p-6"
+              className="relative w-full max-w-sm rounded-2xl border border-[#E7E3DC] bg-white p-6 shadow-2xl text-[#171717]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-secondary)]/15">
-                <AlertTriangle size={24} className="text-[var(--color-secondary)]" />
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                <AlertTriangle size={24} />
               </div>
-              <h3 className="text-lg font-black">Are you sure?</h3>
-              <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+              <h3 className="text-lg font-bold text-[#171717]">Are you sure?</h3>
+              <p className="mt-2 text-sm text-[#666666]">
                 This will deactivate{" "}
-                <span className="font-semibold text-[var(--color-text)]">
+                <span className="font-semibold text-[#171717]">
                   {deleteTarget.name}
                 </span>
                 . It will no longer appear in the store.
@@ -445,7 +445,7 @@ export default function AdminProductsPage() {
                   type="button"
                   onClick={() => setDeleteTarget(null)}
                   disabled={deleting}
-                  className="btn btn-ghost flex-1"
+                  className="flex-1 rounded-xl border border-[#E7E3DC] bg-white py-2.5 text-sm font-medium text-[#666666] transition-colors hover:bg-[#FAF9F6] hover:text-[#171717]"
                 >
                   Cancel
                 </button>
@@ -453,20 +453,14 @@ export default function AdminProductsPage() {
                   type="button"
                   onClick={confirmDelete}
                   disabled={deleting}
-                  className="btn flex-1 disabled:opacity-70"
-                  style={{
-                    color: "#fff",
-                    background:
-                      "linear-gradient(135deg, var(--color-secondary), #be185d)",
-                    border: "none",
-                  }}
+                  className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {deleting ? (
                     <LoaderCircle size={16} className="animate-spin" />
                   ) : (
                     <Trash2 size={16} />
                   )}
-                  Delete
+                  Deactivate
                 </button>
               </div>
             </motion.div>

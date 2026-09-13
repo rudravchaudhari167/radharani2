@@ -154,7 +154,7 @@ function PriceFilter({
             placeholder="Min"
             aria-label="Minimum price"
             onChange={(e) => onMinChange(e.target.value)}
-            className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 py-2.5 pl-7 pr-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-light)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-light)]/40"
+            className="w-full rounded-xl border border-[var(--color-border)] bg-white py-2.5 pl-7 pr-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[#2D4A6B] focus:outline-none focus:ring-1 focus:ring-[#2D4A6B]/30 transition-colors"
           />
         </div>
         <span className="text-[var(--color-text-muted)]">—</span>
@@ -170,7 +170,7 @@ function PriceFilter({
             placeholder="Max"
             aria-label="Maximum price"
             onChange={(e) => onMaxChange(e.target.value)}
-            className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 py-2.5 pl-7 pr-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-light)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-light)]/40"
+            className="w-full rounded-xl border border-[var(--color-border)] bg-white py-2.5 pl-7 pr-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[#2D4A6B] focus:outline-none focus:ring-1 focus:ring-[#2D4A6B]/30 transition-colors"
           />
         </div>
       </div>
@@ -235,7 +235,7 @@ function FiltersPanel({
         <button
           type="button"
           onClick={onClearAll}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-2.5 text-xs font-semibold text-[var(--color-text)] transition-all hover:border-[var(--color-secondary)]/50 hover:bg-white/10"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-xs font-semibold text-[var(--color-text)] shadow-xs transition-all hover:border-red-500 hover:text-red-600"
         >
           <RotateCcw size={14} />
           Clear all filters ({activeFilterCount})
@@ -251,8 +251,8 @@ function FiltersPanel({
             onClick={() => onCategorySelect(null)}
             className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
               activeCategory === null
-                ? "bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
-                : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
+                ? "bg-[#2D4A6B]/10 font-semibold text-[#2D4A6B]"
+                : "text-[var(--color-text-muted)] hover:bg-black/5 hover:text-[var(--color-text)]"
             }`}
           >
             <span className="flex items-center gap-2">
@@ -260,7 +260,7 @@ function FiltersPanel({
               All Garments
             </span>
             {activeCategory === null && (
-              <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
+              <Check size={14} className="shrink-0 text-[#2D4A6B]" />
             )}
           </button>
 
@@ -273,13 +273,13 @@ function FiltersPanel({
                 onClick={() => onCategorySelect(cat)}
                 className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                   isSelected
-                    ? "bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/10 font-semibold text-[var(--color-primary-light)]"
-                    : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
+                    ? "bg-[#2D4A6B]/10 font-semibold text-[#2D4A6B]"
+                    : "text-[var(--color-text-muted)] hover:bg-black/5 hover:text-[var(--color-text)]"
                 }`}
               >
                 <span className="capitalize">{cat.toLowerCase()}</span>
                 {isSelected && (
-                  <Check size={14} className="shrink-0 text-[var(--color-primary-light)]" />
+                  <Check size={14} className="shrink-0 text-[#2D4A6B]" />
                 )}
               </button>
             );
@@ -299,6 +299,31 @@ function FiltersPanel({
         />
       </div>
 
+      {/* Sizes */}
+      <div>
+        <FilterSectionTitle>Sizes</FilterSectionTitle>
+        <div className="flex flex-wrap gap-2">
+          {SIZES.map((size) => {
+            const isSelected = selectedSizes.includes(size);
+            return (
+              <button
+                key={size}
+                type="button"
+                onClick={() => onToggleSize(size)}
+                aria-pressed={isSelected}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                  isSelected
+                    ? "border-[#2D4A6B] bg-[#2D4A6B] text-white shadow-xs"
+                    : "border-[var(--color-border)] bg-white text-[var(--color-text)] hover:border-[#2D4A6B] hover:text-[#2D4A6B]"
+                }`}
+              >
+                {size}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Colors */}
       <div>
         <FilterSectionTitle>Colors</FilterSectionTitle>
@@ -315,8 +340,8 @@ function FiltersPanel({
                 title={swatch.name}
                 className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 ${
                   isSelected
-                    ? "ring-2 ring-[var(--color-primary-light)] ring-offset-2 ring-offset-[var(--color-bg)]"
-                    : "ring-1 ring-white/15 hover:scale-110"
+                    ? "ring-2 ring-[#2D4A6B] ring-offset-2 ring-offset-[var(--color-bg)]"
+                    : "border border-[var(--color-border)] hover:scale-110 shadow-xs"
                 }`}
                 style={{ backgroundColor: swatch.hex }}
               >
@@ -358,13 +383,13 @@ function FiltersPanel({
                 aria-pressed={isSelected}
                 className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors ${
                   isSelected
-                    ? "border-[var(--color-primary)] bg-white/10 font-semibold text-[var(--color-text)]"
-                    : "border-[var(--color-border)] bg-white/5 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    ? "border-[#2D4A6B] bg-[#2D4A6B]/5 font-semibold text-[var(--color-text)]"
+                    : "border-[var(--color-border)] bg-white text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border-strong)]"
                 }`}
               >
                 <span>{option.label}</span>
                 {isSelected ? (
-                  <Check size={15} className="text-[var(--color-primary-light)]" />
+                  <Check size={15} className="text-[#2D4A6B]" />
                 ) : (
                   <Star size={15} className="text-amber-400/70" />
                 )}
@@ -411,11 +436,11 @@ function SortDropdown({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-2.5 text-sm font-medium text-[var(--color-text)] transition-colors hover:border-white/20 hover:bg-white/10"
+        className="flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--color-text)] shadow-xs transition-colors hover:border-[#2D4A6B]"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <SlidersHorizontal size={15} className="shrink-0 text-[var(--color-primary-light)]" />
+        <SlidersHorizontal size={15} className="shrink-0 text-[#2D4A6B]" />
         <span className="hidden sm:inline">Sort:</span>
         <span className="font-semibold">{label}</span>
         <ChevronDown
@@ -432,7 +457,7 @@ function SortDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/95 shadow-2xl backdrop-blur-xl"
+            className="absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-xl"
           >
             {SORT_OPTIONS.map((option) => {
               const isActive = option.value === value;
@@ -446,8 +471,8 @@ function SortDropdown({
                     }}
                     className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
                       isActive
-                        ? "bg-gradient-to-r from-[var(--color-primary)]/25 to-[var(--color-secondary)]/15 font-semibold text-[var(--color-primary-light)]"
-                        : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
+                        ? "bg-[#2D4A6B]/10 font-semibold text-[#2D4A6B]"
+                        : "text-[var(--color-text)] hover:bg-[#FAF9F6] hover:text-[#2D4A6B]"
                     }`}
                   >
                     {option.label}

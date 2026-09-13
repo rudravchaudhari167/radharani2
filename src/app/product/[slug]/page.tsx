@@ -445,6 +445,36 @@ function ProductPageContent({ params }: { params: ProductParams }) {
               </div>
             )}
 
+            {/* Size Selection */}
+            {product.sizes && product.sizes.length > 0 && (
+              <div>
+                <div className="flex justify-between text-xs font-medium text-[var(--color-text)] mb-2.5">
+                  <span className="uppercase tracking-wider">
+                    Size: <span className="font-semibold">{selectedSize || product.sizes[0]}</span>
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((s) => {
+                    const isSelected = (selectedSize || product.sizes[0]) === s;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSelectedSize(s)}
+                        className={`min-w-[44px] h-10 px-3.5 rounded-lg border text-xs font-semibold tracking-wider uppercase transition-all ${
+                          isSelected
+                            ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-white shadow-xs"
+                            : "border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Quantity Stepper & CTAs */}
             <div className="space-y-3 pt-2">
               <div className="flex gap-3">

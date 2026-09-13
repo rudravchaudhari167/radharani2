@@ -30,7 +30,7 @@ interface AuditLog {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-3.5 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary-light)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-light)]/40";
+  "w-full rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] px-3.5 py-2.5 text-sm text-[#171717] placeholder:text-[#999999] focus:bg-white focus:border-[#2D4A6B] focus:outline-none focus:ring-1 focus:ring-[#2D4A6B]/30 transition-all";
 
 function StorePriceRow({
   icon: Icon,
@@ -42,14 +42,14 @@ function StorePriceRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3">
+    <div className="flex items-center justify-between rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-[var(--color-primary-light)]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-xs text-[#2D4A6B]">
           <Icon size={16} />
         </div>
         <span className="text-sm font-semibold">{label}</span>
       </div>
-      <span className="text-sm font-bold text-[var(--color-primary-light)]">{value}</span>
+      <span className="text-sm font-bold text-[#2D4A6B]">{value}</span>
     </div>
   );
 }
@@ -226,13 +226,13 @@ export default function AdminSettingsPage() {
               {BRAND_SWATCHES.map((swatch) => (
                 <div
                   key={swatch.name}
-                  className="flex flex-col items-center rounded-xl border border-[var(--color-border)] bg-white/5 p-3"
+                  className="flex flex-col items-center rounded-xl border border-[#E7E3DC] bg-[#FAF9F6] p-3 shadow-xs"
                 >
                   <span
-                    className="h-10 w-10 rounded-xl border border-white/10"
+                    className="h-10 w-10 rounded-xl border border-black/10 shadow-xs"
                     style={{ backgroundColor: swatch.hex }}
                   />
-                  <p className="mt-2 text-center text-[10px] font-semibold text-[var(--color-text-muted)]">
+                  <p className="mt-2 text-center text-[10px] font-semibold text-[#666666]">
                     {swatch.name}
                   </p>
                 </div>

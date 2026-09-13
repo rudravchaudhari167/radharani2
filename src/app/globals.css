@@ -28,6 +28,12 @@
   --color-accent-light: #3D5A7B;
   --color-accent-muted: #E8EDF1;
 
+  /* --- Color: Primary & Secondary Aliases --- */
+  --color-primary: #2D4A6B;
+  --color-primary-light: #3D5A7B;
+  --color-secondary: #B8965A;
+  --color-bg-secondary: #FFFFFF;
+
   /* --- Color: Accent Secondary (Peacock Green) --- */
   --color-accent-secondary: #2A5C5A;
   --color-accent-secondary-light: #3A706E;
@@ -109,6 +115,10 @@
   --color-accent: var(--color-accent);
   --color-accent-light: var(--color-accent-light);
   --color-accent-muted: var(--color-accent-muted);
+  --color-primary: var(--color-primary);
+  --color-primary-light: var(--color-primary-light);
+  --color-secondary: var(--color-secondary);
+  --color-bg-secondary: var(--color-bg-secondary);
   --color-accent-secondary: var(--color-accent-secondary);
   --color-accent-secondary-light: var(--color-accent-secondary-light);
   --color-gold: var(--color-gold);
@@ -389,6 +399,12 @@
   }
   .card-elevated {
     box-shadow: var(--shadow-lg);
+  }
+  .glass-card {
+    background-color: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
   }
 
   /* =============================================================================

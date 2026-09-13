@@ -170,7 +170,7 @@ export default function SettingsPage() {
                   type="text"
                   value={user.name}
                   readOnly
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text-muted)]"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm font-medium text-[var(--color-text)]"
                 />
               </div>
               <div>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                   type="email"
                   value={user.email}
                   readOnly
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text-muted)]"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm font-medium text-[var(--color-text)]"
                 />
               </div>
               <div>
@@ -194,7 +194,7 @@ export default function SettingsPage() {
                   type="tel"
                   value={user.phone || "Not set"}
                   readOnly
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text-muted)]"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm font-medium text-[var(--color-text)]"
                 />
               </div>
               <div>
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                   type="text"
                   value={user.role}
                   readOnly
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text-muted)]"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[#FAF9F6] px-4 py-3 text-sm font-medium text-[var(--color-text)] uppercase tracking-wider"
                 />
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function SettingsPage() {
                     type={showCurrent ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 pr-12 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 pr-12 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                     placeholder="Enter current password"
                   />
                   <button
@@ -263,7 +263,7 @@ export default function SettingsPage() {
                     type={showNew ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 pr-12 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 pr-12 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                     placeholder="Min. 8 characters"
                   />
                   <button
@@ -285,7 +285,7 @@ export default function SettingsPage() {
                     type={showConfirm ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 pr-12 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-primary-light)]"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 pr-12 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] outline-none transition-colors focus:border-[#2D4A6B] focus:ring-1 focus:ring-[#2D4A6B]/30"
                     placeholder="Re-enter new password"
                   />
                   <button
