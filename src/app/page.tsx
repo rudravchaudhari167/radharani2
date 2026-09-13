@@ -317,7 +317,7 @@ function NewArrivalsSection() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/products?newArrival=true&limit=4", { cache: "no-store" });
+        const res = await fetch("/api/products?isNewArrival=true&sort=newest&limit=4", { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setProducts(data.products || []);

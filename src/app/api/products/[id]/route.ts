@@ -18,20 +18,38 @@ export async function GET(
 
     const supabase = getSupabaseServer();
 
-    let { data: product, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .eq("is_active", true)
-      .maybeSingle();
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id
+      );
 
-    if (!product && !error) {
-      ({ data: product, error } = await supabase
+    let product = null;
+    let error = null;
+
+    if (isUuid) {
+      const res = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", id)
+        .eq("is_active", true)
+        .maybeSingle();
+      product = res.data;
+      error = res.error;
+    }
+
+    if (!product) {
+      const res = await supabase
         .from("products")
         .select("*")
         .eq("slug", id.toLowerCase())
         .eq("is_active", true)
-        .maybeSingle());
+        .maybeSingle();
+      if (res.data) {
+        product = res.data;
+        error = null;
+      } else if (!error) {
+        error = res.error;
+      }
     }
 
     if (error || !product) {

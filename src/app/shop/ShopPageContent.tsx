@@ -42,8 +42,8 @@ export const COLOR_SWATCHES: { name: string; hex: string }[] = [
 ];
 
 export const SORT_OPTIONS = [
+  { value: "newest", label: "Newest Arrivals" },
   { value: "popular", label: "Recommended" },
-  { value: "newest", label: "Newest" },
   { value: "price-asc", label: "Price: Low to High" },
   { value: "price-desc", label: "Price: High to Low" },
   { value: "rating", label: "Best Selling" },
@@ -626,7 +626,7 @@ export default function ShopPageContent({
     ? (presetCategory.toUpperCase() as Category)
     : null;
 
-  const [sort, setSort] = useState<SortValue>("popular");
+  const [sort, setSort] = useState<SortValue>("newest");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [clientFilters, setClientFilters] =
     useState<ClientFilters>(EMPTY_CLIENT_FILTERS);

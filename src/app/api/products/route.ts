@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
       Math.max(1, parseInt(searchParams.get("limit") || "12", 10))
     );
     const featured = searchParams.get("featured");
-    const isNewArrival = searchParams.get("isNewArrival");
+    const isNewArrival =
+      searchParams.get("isNewArrival") || searchParams.get("newArrival");
 
     const supabase = getSupabaseServer();
 
@@ -71,17 +72,25 @@ export async function GET(request: NextRequest) {
       case "popular":
         q = q
           .order("review_count", { ascending: false })
-          .order("rating", { ascending: false });
+          .order("rating", { ascending: false })
+          .order("created_at", { ascending: false });
         break;
       case "price-asc":
-        q = q.order("price", { ascending: true });
+        q = q
+          .order("price", { ascending: true })
+          .order("created_at", { ascending: false });
         break;
       case "price-desc":
-        q = q.order("price", { ascending: false });
+        q = q
+          .order("price", { ascending: false })
+          .order("created_at", { ascending: false });
         break;
       case "rating":
-        q = q.order("rating", { ascending: false });
+        q = q
+          .order("rating", { ascending: false })
+          .order("created_at", { ascending: false });
         break;
+      case "newest":
       default:
         q = q.order("created_at", { ascending: false });
     }

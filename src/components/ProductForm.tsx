@@ -297,7 +297,12 @@ export default function ProductForm({
       fileInputRef.current.value = "";
     }
     if (successCount > 0) {
-      addToast(`Uploaded ${successCount} photo${successCount > 1 ? "s" : ""} to storage!`, "success");
+      addToast(
+        `Uploaded ${successCount} photo${successCount > 1 ? "s" : ""}! Click "${
+          mode === "create" ? "Publish Cloth to Store" : "Save Changes"
+        }" below to save.`,
+        "success"
+      );
     }
   };
 
@@ -803,7 +808,7 @@ export default function ProductForm({
             transition={{ delay: 0.2 }}
             className="glass-card p-6"
           >
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="flex items-center gap-2 text-lg font-bold">
                   <ImageIcon size={20} className="text-[var(--color-primary-light)]" />
@@ -813,6 +818,18 @@ export default function ProductForm({
                   The first image is used as the primary hero image. Drag/reorder or click to set primary.
                 </p>
               </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn btn-primary flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-md shadow-[var(--color-primary)]/20"
+              >
+                {submitting ? (
+                  <LoaderCircle size={14} className="animate-spin" />
+                ) : (
+                  <CheckCircle2 size={14} />
+                )}
+                <span>{mode === "create" ? "Publish Product" : "Save Changes"}</span>
+              </button>
             </div>
 
             {/* Direct Upload Dropzone */}
