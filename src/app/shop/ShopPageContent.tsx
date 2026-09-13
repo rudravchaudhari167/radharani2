@@ -78,14 +78,12 @@ interface ClientFilters {
   sizes: string[];
   colors: string[];
   minRating: number | null;
-  inStock: boolean;
 }
 
 const EMPTY_CLIENT_FILTERS: ClientFilters = {
   sizes: [],
   colors: [],
   minRating: null,
-  inStock: false,
 };
 
 function hasActivePrice(priceRange: { min: string; max: string }): boolean {
@@ -117,10 +115,6 @@ function matchesClientFilters(
     ) {
       return false;
     }
-  }
-
-  if (filters.inStock && typeof product.stock === "number" && product.stock <= 0) {
-    return false;
   }
 
   return true;
@@ -208,8 +202,6 @@ interface FiltersPanelProps {
   onToggleColor: (color: string) => void;
   minRating: number | null;
   onRatingChange: (rating: number | null) => void;
-  inStock: boolean;
-  onInStockChange: (value: boolean) => void;
   activeFilterCount: number;
   onClearAll: () => void;
   onCategorySelect: (category: Category | null) => void;
@@ -233,8 +225,6 @@ function FiltersPanel({
   onToggleColor,
   minRating,
   onRatingChange,
-  inStock,
-  onInStockChange,
   activeFilterCount,
   onClearAll,
   onCategorySelect,
@@ -382,33 +372,6 @@ function FiltersPanel({
             );
           })}
         </div>
-      </div>
-
-      {/* In stock */}
-      <div>
-        <button
-          type="button"
-          onClick={() => onInStockChange(!inStock)}
-          aria-pressed={inStock}
-          className="flex w-full items-center justify-between rounded-lg border border-[var(--color-border)] bg-white/5 px-3 py-3 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
-        >
-          <span className={inStock ? "font-semibold text-[var(--color-text)]" : ""}>
-            In Stock only
-          </span>
-          <span
-            className={`relative h-5 w-9 rounded-full transition-colors ${
-              inStock
-                ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)]"
-                : "bg-white/10"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                inStock ? "translate-x-4" : "translate-x-0.5"
-              }`}
-            />
-          </span>
-        </button>
       </div>
     </div>
   );
@@ -714,7 +677,6 @@ export default function ShopPageContent({
       clientFilters.sizes.length +
       clientFilters.colors.length +
       (clientFilters.minRating != null ? 1 : 0) +
-      (clientFilters.inStock ? 1 : 0) +
       (hasActivePrice(priceRange) ? 1 : 0),
     [clientFilters, priceRange]
   );
@@ -746,11 +708,6 @@ export default function ShopPageContent({
 
   const handleRatingChange = useCallback((rating: number | null) => {
     setClientFilters((prev) => ({ ...prev, minRating: rating }));
-    setPage(1);
-  }, []);
-
-  const handleInStockChange = useCallback((value: boolean) => {
-    setClientFilters((prev) => ({ ...prev, inStock: value }));
     setPage(1);
   }, []);
 
@@ -909,8 +866,6 @@ export default function ShopPageContent({
                   onToggleColor={toggleColor}
                   minRating={clientFilters.minRating}
                   onRatingChange={handleRatingChange}
-                  inStock={clientFilters.inStock}
-                  onInStockChange={handleInStockChange}
                   activeFilterCount={activeFilterCount}
                   onClearAll={handleClearAll}
                   onCategorySelect={handleCategorySelect}
@@ -1098,8 +1053,6 @@ export default function ShopPageContent({
                     onToggleColor={toggleColor}
                     minRating={clientFilters.minRating}
                     onRatingChange={handleRatingChange}
-                    inStock={clientFilters.inStock}
-                    onInStockChange={handleInStockChange}
                     activeFilterCount={activeFilterCount}
                     onClearAll={handleClearAll}
                     onCategorySelect={handleCategorySelect}
