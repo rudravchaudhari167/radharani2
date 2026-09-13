@@ -20,9 +20,7 @@ import { useWishlistStore } from "@/lib/wishlist-store";
 import SearchOverlay from "@/components/SearchOverlay";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
   { href: "/shop", label: "Shop" },
-  { href: "/collections", label: "Collections" },
 ];
 
 function Badge({ count }: { count: number }) {

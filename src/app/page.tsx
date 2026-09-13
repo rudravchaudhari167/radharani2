@@ -7,33 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Sparkles, ShieldCheck, Truck, RefreshCw, Feather } from "lucide-react";
 import ProductCard, { type ProductCardProduct } from "@/components/ProductCard";
 
-/* ------------------------------------------------------------------ */
-/* Collections Data with Valid Fashion Images                         */
-/* ------------------------------------------------------------------ */
 
-const COLLECTIONS = [
-  {
-    name: "KURTIS & ANARKALIS",
-    eyebrow: "Sacred Radha Grace",
-    description: "Flowing georgette kurti sets and floor-sweeping anarkalis with delicate zardozi detailing.",
-    href: "/shop?search=kurti",
-    image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    name: "SAREES & LEHENGAS",
-    eyebrow: "Royal Weaves & Festive Couture",
-    description: "Handwoven art-silks, heritage Banarasi borders, and opulent ceremonial lehengas.",
-    href: "/shop?search=saree",
-    image: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    name: "CONTEMPORARY DRESSES",
-    eyebrow: "Fluid Modern Silhouettes",
-    description: "Liquid satin midi dresses, breezy mul-mul palazzo co-ords, and everyday elegance.",
-    href: "/shop?search=dress",
-    image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop",
-  },
-];
 
 /* ------------------------------------------------------------------ */
 /* Hero Component                                                     */
@@ -101,7 +75,7 @@ function Hero() {
             href="/shop"
             className="flex items-center justify-center gap-2 rounded-full bg-[var(--color-accent)] px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-white shadow-sm transition-transform hover:scale-[1.02] hover:bg-[var(--color-accent-light)] active:scale-100"
           >
-            <span>SHOP CATALOG</span>
+            <span>SHOP NOW</span>
             <ArrowRight size={14} />
           </Link>
         </motion.div>
@@ -112,73 +86,6 @@ function Hero() {
         <span className="text-[10px] uppercase tracking-[0.24em] text-[var(--color-text-muted)]">
           SCROLL TO EXPLORE
         </span>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Featured Collections Component                                     */
-/* ------------------------------------------------------------------ */
-
-function FeaturedCollections() {
-  const reduceMotion = useReducedMotion();
-
-  return (
-    <section id="collections" className="py-20 sm:py-28 bg-[var(--color-bg)] scroll-mt-24">
-      <div className="mx-auto max-w-[80rem] px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mb-14 max-w-2xl text-center">
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.3em] text-[var(--color-accent)]">
-            CURATED EDITIONS
-          </p>
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-[var(--color-text)]">
-            Featured Collections
-          </h2>
-          <p className="mt-3 text-sm text-[var(--color-text-muted)]">
-            Graceful ethnic silhouettes and contemporary feminine forms shaped by timeless devotion.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {COLLECTIONS.map((col, idx) => (
-            <motion.div
-              key={col.name}
-              initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-              whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
-              className="group relative overflow-hidden rounded-lg border border-[var(--color-border)]/60 bg-[var(--color-bg-muted)]"
-            >
-              <Link href={col.href} className="block aspect-[3/4] relative w-full overflow-hidden">
-                <Image
-                  src={col.image}
-                  alt={col.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent transition-opacity group-hover:from-black/70" />
-
-                {/* Content Overlay */}
-                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 text-white flex flex-col">
-                  <span className="text-[10px] font-semibold tracking-[0.24em] uppercase text-white/80">
-                    {col.eyebrow}
-                  </span>
-                  <h3 className="font-serif text-2xl sm:text-3xl font-normal tracking-wide mt-1">
-                    {col.name}
-                  </h3>
-                  <p className="text-xs text-white/90 font-light mt-1.5 leading-relaxed">
-                    {col.description}
-                  </p>
-                  <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-white opacity-90 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
-                    <span>Explore Collection</span>
-                    <ArrowRight size={13} />
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -337,7 +244,7 @@ function NewArrivalsSection() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.28em] text-[var(--color-accent)]">
-              FRESH SILHOUETTES
+              LATEST ARRIVALS
             </p>
             <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[var(--color-text)]">
               New Arrivals
@@ -436,7 +343,6 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       <Hero />
-      <FeaturedCollections />
       <BestsellersSection />
       <BrandStoryTeaser />
       <NewArrivalsSection />

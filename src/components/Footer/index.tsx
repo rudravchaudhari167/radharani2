@@ -59,10 +59,9 @@ function PinterestIcon({ size = 16 }: { size?: number }) {
 }
 
 const SHOP_LINKS = [
-  { href: "/shop", label: "Shop & Lookbook" },
-  { href: "/collections", label: "Curated Editions" },
-  { href: "/shop?view=catalogue", label: "All Garments" },
+  { href: "/shop", label: "All Products" },
   { href: "/shop?sort=newest", label: "New Arrivals" },
+  { href: "/shop?featured=true", label: "Bestsellers" },
 ];
 
 const HELP_LINKS = [
